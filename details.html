@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Details Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .details {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 600px;
+            text-align: center;
+        }
+        .details img {
+            width: 100%;
+            height: auto;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        .details h1 {
+            margin: 0 0 20px;
+        }
+        .details p {
+            margin: 10px 0;
+        }
+        .sub-boxes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        .sub-box {
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            width: 45%;
+            text-align: center;
+        }
+        .sub-box img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .sub-box p {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .sub-box button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="details">
+        <img id="detail-image" src="" alt="Image">
+        <h1 id="detail-title">Title</h1>
+        <p id="detail-description">Description about the selected item.</p>
+        <div id="sub-boxes" class="sub-boxes"></div>
+    </div>
+    <script>
+        
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+       
+        const detailsMap = {
+
+    "Ideology": {
+        description: "This is a detailed description of Ideology. It represents the belief systems that influence society.",
+        subBoxes: [
+            { 
+                name: "Ideology Concept 1", 
+                description: "This concept explores the fundamentals of Ideology 1.", 
+                image: "concept1.jpg", 
+                buttonLabel: "Learn More" 
+            },
+            { 
+                name: "Ideology Concept 2", 
+                description: "This concept focuses on the implications of Ideology 2.", 
+                image: "concept2.jpg", 
+                buttonLabel: "Discover More" 
+            }
+        ]
+    },
+    "Energy industry": {
+        description: "This is a detailed description of the Energy Industry. It involves the production and sale of energy.",
+        subBoxes: [
+            { 
+                name: "Energy Concept 1", 
+                description: "Exploration of renewable energy sources.", 
+                image: "energy1.jpg", 
+                buttonLabel: "Explore" 
+            },
+            { 
+                name: "Energy Concept 2", 
+                description: "An overview of fossil fuels.", 
+                image: "energy2.jpg", 
+                buttonLabel: "Learn More" 
+            }
+        ]
+    },
+    "Ecology": {
+        description: "This is a detailed description of Ecology. It focuses on the relationships between living organisms and their environment.",
+        subBoxes: [
+            { 
+                name: "Ecology Concept 1", 
+                description: "The balance of ecosystems.", 
+                image: "ecology1.jpg", 
+                buttonLabel: "Learn More" 
+            },
+            { 
+                name: "Ecology Concept 2", 
+                description: "Human impact on ecosystems.", 
+                image: "ecology2.jpg", 
+                buttonLabel: "Discover More" 
+            }
+        ]
+    },
+    "Education": {
+        description: "This is a detailed description of Education. It focuses on teaching, learning, and innovation in education.",
+        subBoxes: [
+            { 
+                name: "Education Concept 1", 
+                description: "Modern educational technologies.", 
+                image: "education1.jpg", 
+                buttonLabel: "Learn More" 
+            },
+            { 
+                name: "Education Concept 2", 
+                description: "The role of teachers in society.", 
+                image: "education2.jpg", 
+                buttonLabel: "Discover More" 
+            }
+        ]
+    },
+    "Housing Services": {
+        description: "This is a detailed description of Housing Services. It deals with providing and managing residential services.",
+        subBoxes: [
+            { 
+                name: "Housing Concept 1", 
+                description: "Affordable housing initiatives.", 
+                image: "housing1.jpg", 
+                buttonLabel: "Explore" 
+            },
+            { 
+                name: "Housing Concept 2", 
+                description: "Sustainable building solutions.", 
+                image: "housing2.jpg", 
+                buttonLabel: "Learn More" 
+            }
+        ]
+    },
+    "Forest Department": {
+        description: "This is a detailed description of the Forest Department. It focuses on forest conservation and management.",
+        subBoxes: [
+            { 
+                name: "Forest Concept 1", 
+                description: "Conservation practices.", 
+                image: "forest_conservation.jpg", 
+                buttonLabel: "Explore" 
+            },
+            { 
+                name: "Wildlife Protection", 
+                description: "Strategies to protect wildlife and their habitats.", 
+                image: "wildlife_protection.jpg", 
+                buttonLabel: "Learn More" 
+            }
+        ]
+    },
+    "Science and Research": {
+        description: "This is a detailed description of Science and Research. It focuses on advancements in scientific knowledge and research.",
+        subBoxes: [
+            { 
+                name: "New Physics Discoveries", 
+                description: "Recent advancements in the field of physics.", 
+                image: "science1.jpg", 
+                buttonLabel: "Discover More" 
+            },
+            { 
+                name: "Genetics Research", 
+                description: "Progress in genetic research.", 
+                image: "genetics.jpg", 
+                buttonLabel: "View Details" 
+            }
+        ]
+    },
+    "Sports": {
+        description: "This is a detailed description of Sports. It covers developments in athletics and physical education.",
+        subBoxes: [
+            { 
+                name: "Sports Science", 
+                description: "Advancements in the science of sports.", 
+                image: "sports1.jpg", 
+                buttonLabel: "Explore" 
+            },
+            { 
+                name: "Inclusion in Sports", 
+                description: "The role of inclusion and diversity in sports.", 
+                image: "sports2.jpg", 
+                buttonLabel: "Learn More" 
+            }
+        ]
+    },
+    "Healthcare": {
+        description: "This is a detailed description of Healthcare. It focuses on advancements in medicine and patient care.",
+        subBoxes: [
+            { 
+                name: "Telemedicine", 
+                description: "The rise of telemedicine and its impact on healthcare delivery.", 
+                image: "telemedicine.jpg", 
+                buttonLabel: "Learn More" 
+            },
+            { 
+                name: "Gene Therapy", 
+                description: "Breakthroughs in gene therapy to treat rare diseases.", 
+                image: "gene_therapy.jpg", 
+                buttonLabel: "Discover More" 
+            }
+        ]
+    },
+    "Religions": {
+        description: "This is a detailed description of Religions. It focuses on the impact of religion on culture and society.",
+        subBoxes: [
+            { 
+                name: "Religion in Modern Society", 
+                description: "The role of religion in today's world.", 
+                image: "religion1.jpg", 
+                buttonLabel: "Explore" 
+            },
+            { 
+                name: "Religious Influence in Politics", 
+                description: "How religion influences political systems.", 
+                image: "religion2.jpg", 
+                buttonLabel: "Learn More" 
+            }
+        ]
+    },
+    "Culture": {
+        description: "This is a detailed description of Culture. It covers the customs, traditions, and arts of societies.",
+        subBoxes: [
+            { 
+                name: "Cultural Evolution", 
+                description: "The evolution of cultural practices.", 
+                image: "culture1.jpg", 
+                buttonLabel: "Discover More" 
+            },
+            { 
+                name: "Globalization and Culture", 
+                description: "The effects of globalization on cultural practices.", 
+                image: "culture2.jpg", 
+                buttonLabel: "View Details" 
+            }
+        ]
+    },
+    "Population Employment": {
+        description: "This is a detailed description of Population Employment. It focuses on employment trends and workforce development.",
+        subBoxes: [
+            { 
+                name: "Global Employment Trends", 
+                description: "Trends in global employment.", 
+                image: "employment1.jpg", 
+                buttonLabel: "Explore" 
+            },
+            { 
+                name: "Automation in Workforce", 
+                description: "The role of automation in modern workforce dynamics.", 
+                image: "employment2.jpg", 
+                buttonLabel: "Learn More" 
+            }
+        ]
+    },
+
+ 
+"Police": {
+    description: "This is a detailed description of Police. It focuses on law enforcement, public safety, and crime prevention.",
+    subBoxes: [
+        { 
+            name: "Community Policing", 
+            description: "Engaging with communities to build trust and reduce crime.", 
+            image: "police_community.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "Crime Prevention Tactics", 
+            description: "Methods and strategies to prevent crime before it happens.", 
+            image: "crime_prevention.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+},
+"State Security Service": {
+    description: "This is a detailed description of State Security Service. It focuses on national security and intelligence gathering.",
+    subBoxes: [
+        { 
+            name: "Cyber Threat Analysis", 
+            description: "Monitoring and countering cyber threats to national security.", 
+            image: "cyber_threats.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "Surveillance Systems", 
+            description: "How surveillance technology is used for national security.", 
+            image: "surveillance.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+},
+"Ministry of Defence": {
+    description: "This is a detailed description of the Ministry of Defence. It focuses on national defense strategies and military operations.",
+    subBoxes: [
+        { 
+            name: "Defense Budget Allocation", 
+            description: "How the defense budget is distributed for various operations.", 
+            image: "defense_budget.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "International Defense Cooperation", 
+            description: "Collaborating with other countries on defense initiatives.", 
+            image: "defense_cooperation.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+},
+"State Emergency Service": {
+    description: "This is a detailed description of the State Emergency Service. It focuses on disaster response and management.",
+    subBoxes: [
+        { 
+            name: "Search and Rescue Operations", 
+            description: "Coordinating search and rescue operations during emergencies.", 
+            image: "search_rescue.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "Disaster Relief Programs", 
+            description: "Providing relief to victims of natural and man-made disasters.", 
+            image: "disaster_relief.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+},
+"Defence Research Department": {
+    description: "This is a detailed description of the Defence Research Department. It focuses on research and development in military technology.",
+    subBoxes: [
+        { 
+            name: "Advanced Weaponry", 
+            description: "Development of cutting-edge weapons for military use.", 
+            image: "advanced_weaponry.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "Autonomous Drones", 
+            description: "Research on autonomous drones for battlefield applications.", 
+            image: "autonomous_drones.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+},
+"State Intelligence": {
+    description: "This is a detailed description of State Intelligence. It focuses on intelligence gathering and counterintelligence activities.",
+    subBoxes: [
+        { 
+            name: "Espionage Prevention", 
+            description: "Measures to prevent espionage activities against the state.", 
+            image: "espionage_prevention.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "Covert Operations", 
+            description: "Conducting secret operations to protect national interests.", 
+            image: "covert_operations.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+},
+"External Affairs": {
+    description: "This is a detailed description of External Affairs. It focuses on diplomacy, foreign relations, and international cooperation.",
+    subBoxes: [
+        { 
+            name: "Diplomatic Relations", 
+            description: "Building and maintaining relationships with foreign nations.", 
+            image: "diplomatic_relations.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "Trade Agreements", 
+            description: "Negotiating international trade agreements to boost the economy.", 
+            image: "trade_agreements.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+},
+"Law": {
+    description: "This is a detailed description of Law. It focuses on legislation, legal systems, and justice administration.",
+    subBoxes: [
+        { 
+            name: "Criminal Justice System", 
+            description: "The structure and functioning of the criminal justice system.", 
+            image: "criminal_justice.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "Legal Reforms", 
+            description: "Ongoing reforms aimed at improving the legal system.", 
+            image: "legal_reforms.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+},
+"International Organizations": {
+    description: "This is a detailed description of International Organizations. It covers global institutions like the UN, WTO, and WHO.",
+    subBoxes: [
+        { 
+            name: "United Nations", 
+            description: "The role of the UN in global peace and security.", 
+            image: "un.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "World Trade Organization", 
+            description: "Facilitating global trade through international agreements.", 
+            image: "wto.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+},
+"Social Policy": {
+    description: "This is a detailed description of Social Policy. It focuses on welfare, healthcare, and social equity.",
+    subBoxes: [
+        { 
+            name: "Welfare Programs", 
+            description: "A look into programs aimed at reducing poverty and inequality.", 
+            image: "welfare_programs.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "Healthcare Policies", 
+            description: "The role of policies in improving national healthcare systems.", 
+            image: "healthcare_policies.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+},
+"Infrastructure": {
+    description: "This is a detailed description of Infrastructure. It focuses on the development of physical systems like transportation and utilities.",
+    subBoxes: [
+        { 
+            name: "Road Networks", 
+            description: "Expanding and maintaining national road networks.", 
+            image: "road_networks.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "Public Utilities", 
+            description: "Building and maintaining essential public utilities like water and electricity.", 
+            image: "public_utilities.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+},
+"Disaster Management": {
+    description: "This is a detailed description of Disaster Management. It focuses on preparedness and response to natural and man-made disasters.",
+    subBoxes: [
+        { 
+            name: "Early Warning Systems", 
+            description: "Technologies that provide early warnings for impending disasters.", 
+            image: "early_warning.jpg", 
+            buttonLabel: "Learn More" 
+        },
+        { 
+            name: "Crisis Management", 
+            description: "Coordinated response strategies for disaster recovery.", 
+            image: "crisis_management.jpg", 
+            buttonLabel: "Discover More" 
+        }
+    ]
+}
+        }
+
+function displayDetails(name, detail) {
+            console.log("Displaying details for:", name);  
+            if (!detail) {
+                console.log("Detail not found for:", name); 
+                return;
+            }
+
+            document.getElementById('detail-title').textContent = name;
+            document.getElementById('detail-description').textContent = detail.description || `This is a detailed description of ${name}.`;
+            document.getElementById('detail-image').src = detail.image || name.toLowerCase().replace(/\s+/g, '') + ".jpg";
+
+            const subBoxesContainer = document.getElementById('sub-boxes');
+            subBoxesContainer.innerHTML = ""; 
+
+            if (detail.subBoxes && detail.subBoxes.length > 0) {
+                detail.subBoxes.forEach(subBox => {
+                    const subBoxElement = document.createElement('div');
+                    subBoxElement.className = 'sub-box';
+
+                    const subBoxImage = document.createElement('img');
+                    subBoxImage.src = subBox.image;
+                    subBoxImage.alt = subBox.name;
+                    subBoxElement.appendChild(subBoxImage);
+
+                    const subBoxDescription = document.createElement('p');
+                    subBoxDescription.textContent = subBox.description;
+                    subBoxElement.appendChild(subBoxDescription);
+
+                    const subBoxButton = document.createElement('button');
+                    subBoxButton.textContent = subBox.buttonLabel;
+                    subBoxElement.appendChild(subBoxButton);
+
+                    subBoxesContainer.appendChild(subBoxElement);
+                });
+            }
+        }
+
+       
+        const name = getQueryParam('name');
+        console.log("Query parameter name:", name);  
+
+        if (name) {
+            const detail = detailsMap[name] || null;
+            displayDetails(name, detail);
+        }
+    </script>
+</body>
+</html>
