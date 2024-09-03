@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Simulator - Game</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            background-color: #e0e0e0;
+        }
+
+        h1 {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            text-align: center;
+            background-color: #dbd7d7;
+            color: #2e2d2d;
+            padding: 20px 0;
+            margin: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        nav {
+            position: fixed;
+            top: 60px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            background-color: #424242;
+            color: #fff;
+            padding: 10px 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        nav .nav-item {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .container {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 20px;
+            width: 90%;
+            max-width: 1200px;
+            margin: 120px auto 20px;
+            grid-template-rows: auto 1fr;
+        }
+
+        .container h2 {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #2a2828;
+            font-size: 24px;
+            margin: 0 0 20px 0; 
+            font-weight: 500;
+        }
+
+        .container.active {
+            display: grid;
+        }
+
+        .box {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            text-align: center;
+            transition: transform 0.3s ease-in-out;
+            padding: 0;
+        }
+
+        .box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .box img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .box p {
+            margin: 15px 0 0;
+            font-size: 16px;
+            color: #424242;
+            font-weight: 500;
+        }
+
+        .box button {
+            margin: 15px 0 20px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #2196F3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .box button:hover {
+            background-color: #1976D2;
+        }
+
+        .buttons {
+            margin: 30px;
+        }
+
+        .buttons button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #424242;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .buttons button:hover {
+            background-color: #616161;
+        }
+    </style>
+</head>
+<body>
+    <h1>World Simulator</h1>
+    
+    <nav>
+        <div class="nav-item" id="countryName">Country: </div>
+        <div class="nav-item" id="treasuryAmount">Treasury: $1,000,000,000</div>
+        <div class="nav-item" id="popularity">Popularity: 85%</div>
+        <div class="nav-item" id="timeline">Date: 01/01/2000</div>
+        <div class="nav-item" id="incomePerDay">Income per Day: $10,000,000</div>
+        <div class="nav-item" id="populationCount">Population: </div>
+    </nav>
+
+    <div class="container" id="slide1"><h2> Country Expenses</h2></div>
+    <div class="container" id="slide2"><h2> Country Expenses</h2></div>
+    <div class="container" id="slide3"> <h2> Country Income</h2></div>
+    <div class="container" id="slide4"></div>
+    <div class="buttons">
+        <button onclick="prevSlide()">Previous Slide</button>
+        <button onclick="nextSlide()">Next Slide</button>
+    </div>
+    
+    <script>
+       // Retrieve the player name, country, daily income, treasury, and population from URL parameters
+function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+}
+
+const playerName = getQueryParam('playerName');
+const selectedCountry = getQueryParam('country');
+const dailyIncome = parseInt(getQueryParam('dailyIncome'), 10);
+let treasury = parseInt(getQueryParam('treasury'), 10);
+let population = parseInt(getQueryParam('population'), 10);
+
+// Set the initial population growth rate (annual growth rate in %)
+const populationGrowthRate = 0.25; // Example: 1% annual growth rate
+
+// Function to calculate daily population growth based on the annual growth rate
+function calculateDailyPopulationGrowth(population, growthRate) {
+    const dailyGrowthRate = (growthRate / 100) / 365; // Convert annual growth rate to daily
+    return Math.floor(population * dailyGrowthRate);   // Calculate the daily growth increment
+}
+
+// Set the country and player information in the UI
+document.getElementById('countryName').textContent = `Country: ${selectedCountry}`;
+document.getElementById('treasuryAmount').textContent = `Treasury: $${treasury.toLocaleString()}`;
+document.getElementById('incomePerDay').textContent = `Income per Day: $${dailyIncome.toLocaleString()}`;
+document.getElementById('populationCount').textContent = `Population: ${population.toLocaleString()}`;
+
+// Date, income, and population accumulation logic
+let currentDate = new Date('2000-01-01');
+
+function updateTimeAndTreasuryAndPopulation() {
+    // Update the date by adding one day
+    currentDate.setDate(currentDate.getDate() + 1);
+
+    // Update the treasury amount by adding daily income
+    treasury += dailyIncome;
+
+    // Update the population by adding daily population growth
+    const dailyPopulationGrowth = calculateDailyPopulationGrowth(population, populationGrowthRate);
+    population += dailyPopulationGrowth;
+
+    // Format the date to MM/DD/YYYY
+    const formattedDate = currentDate.toLocaleDateString('en-US');
+
+    // Update the displayed values
+    document.getElementById('timeline').textContent = `Date: ${formattedDate}`;
+    document.getElementById('treasuryAmount').textContent = `Treasury: $${treasury.toLocaleString()}`;
+    document.getElementById('populationCount').textContent = `Population: ${population.toLocaleString()}`;
+}
+
+// Call the updateTimeAndTreasuryAndPopulation function every second (1000 milliseconds)
+setInterval(updateTimeAndTreasuryAndPopulation, 1000);
+
+// Names and Images Data
+const names = [
+    "Ideology", "Energy Industry", "Ecology", "Education", 
+    "Housing Services", "Forest Department", "Science and Research", "Sports", 
+    "Healthcare", "Religions", "Culture", "Population Employment",
+    "Police", "State Security Service", "Ministry of Defence", "State Emergency Service", 
+    "Defence Research Department", "State Intelligence", "External Affairs", 
+    "Law", "International Organizations", "Social Policy", "Infrastructure", 
+    "Disaster Management", "Taxes", "Electrical Energy Industry", 
+    "Fuel Industry", "Ferrous Industry", "Non-Ferrous Industry", 
+    "Chemical Industry", "Machinery Industry", "Timber Industry", 
+    "Glass Industry", "Food Industry", "Consumer Goods Industry", 
+    "Defence Industry", "Medical Industry", "Central Bank", "World Trade"
+];
+
+const images = [
+    "https://th.bing.com/th/id/OIP.w9l_40ZyL_FRuHrQ0UAEOAAAAA?rs=1&pid=ImgDetMain", 
+    "https://th.bing.com/th/id/OIP.mA_X9l0PLlmR4BCAbwqvPQHaH_?w=169&h=182&c=7&r=0&o=5&dpr=1.5&pid=1.7", 
+    "https://th.bing.com/th/id/OIP.YBiCWz07bbMwFXsvnOsWnwHaKS?w=124&h=180&c=7&r=0&o=5&dpr=1.5&pid=1.7", 
+    "https://www.solidworksassignmenthelp.com/uploads/image_banners/Mastering%20SolidWorks%20GUI,%20Hardware%20&%20Software%20Requirements.webp",
+    "https://thumbs.dreamstime.com/z/suburban-landscape-urban-architecture-small-big-city-buildings-suburbans-houses-cartoon-vector-illustration-suburban-landscape-167183360.jpg",
+    "https://th.bing.com/th/id/OIP.APg1SvmDni1XT9OHdbvs8gHaE8?w=280&h=187&c=7&r=0&o=5&dpr=1.5&pid=1.7",
+    "https://static.vecteezy.com/system/resources/previews/000/296/218/large_2x/science-symbols-on-hexagon-background-vector.jpg", 
+    "https://www.schoolofengineeringandsciences.org/sites/main/files/imagecache/thumbnail/main-images/sports_1.png?1578079690", 
+    "https://cdn5.vectorstock.com/i/1000x1000/75/74/health-care-logo-vector-12607574.jpg",
+    "https://th.bing.com/th/id/OIP.rHEmZGGlIOZFpVWxlLaNEAAAAA?rs=1&pid=ImgDetMain",
+    "https://im.indiatimes.in/media/content/2013/Oct/maharaja_1382090835_540x540.jpg",
+    "https://media.istockphoto.com/id/1533834784/vector/symbol-people-icon-vector-graphics.jpg?b=1&s=170667a&w=0&k=20&c=jD40XG9sRuM4f3KMsVNiN0aSJ-vwdaxk4EG5pffnIFs=",
+    "https://thumbs.dreamstime.com/z/police-officer-character-cartoon-color-illustration-vector-police-officer-character-design-cartoon-color-illustration-logo-140675923.jpg", 
+    "https://th.bing.com/th/id/OIP.nOQAgxKRNdVNJsENNsrc6gHaEL?w=800&h=452&rs=1&pid=ImgDetMain", 
+    "https://webstockreview.net/images/military-clipart-foji-12.png",
+    "https://th.bing.com/th/id/OIP.CINl0GI6d4nXiklDuIIvygHaDx?w=320&h=178&c=7&r=0&o=5&dpr=1.5&pid=1.7",
+    "https://th.bing.com/th/id/OIP.5EPQjSvXcNYiEfD1Rd7UJwHaEH?w=301&h=180&c=7&r=0&o=5&dpr=1.5&pid=1.7", 
+    "https://th.bing.com/th/id/OIP.6s8nyZjCRmIMo3ZC8xE0LwAAAA?rs=1&pid=ImgDetMain", 
+    "https://th.bing.com/th/id/OIP.8KfMfbV6M44Y3GnfcjFSKwHaHa?rs=1&pid=ImgDetMain",
+    "https://cdn5.vectorstock.com/i/1000x1000/74/64/law-school-course-cartoon-vector-25117464.jpg",
+    "https://onlinefreenotes.com/wp-content/uploads/2022/04/international-organisation.png",
+    "https://1.bp.blogspot.com/-1GblkraB_Rs/XvbLxOcJEMI/AAAAAAAADA4/nqXua1-TJOU-EEdeOpXqT2lWKxHt1UsXgCK4BGAsYHg/s855/WelfareReformWordle.jpg", 
+    "https://th.bing.com/th/id/OIP.h43SYSTzQsKcPGl4QQXV6QHaF-?w=223&h=180&c=7&r=0&o=5&dpr=1.5&pid=1.7", 
+    "https://th.bing.com/th/id/OIP.J0QExLl46ZNZ03UAt_MPjwHaHT?rs=1&pid=ImgDetMain", 
+    "https://www.thoughtco.com/thmb/_hkQBsk3BicaSqT8TatCmDWWSY0=/3862x2578/filters:fill(auto,1)/taxes-increase-636251470-5a7b1367a18d9e0036f31d2c.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/NIGU_Strain_tower.JPG/1200px-NIGU_Strain_tower.JPG",
+    "https://eco-cdn.iqpc.com/eco/images/channel_content/images/offshore_platform.jpg",
+    "https://img.freepik.com/premium-photo/ferrous-metallurgy-industry-illustration_250484-2984.jpg",
+    "https://th.bing.com/th/id/R.b9b200346cd01beeaac888fe6ecc556c?rik=F4%2bdbOxNMDgVVQ&riu=http%3a%2f%2fcapital-lake.com%2fcontent%2fwp-content%2fuploads%2f2018%2f05%2fq-iStock-505410804.jpg&ehk=gZJNQHJkuv%2fW%2btYMQ3FCEpzhq0fTb8j1JX%2fzKSUV1AQ%3d&risl=&pid=ImgRaw&r=0",
+    "https://thumbs.dreamstime.com/z/chemical-industry-concept-icon-industrial-chemicals-producing-plant-test-tubes-molecule-synthetic-material-production-idea-180301200.jpg",
+    "https://static.vecteezy.com/system/resources/previews/000/656/952/original/smart-industrial-factory-in-a-flat-style-with-workers-robots-and-assembly-line-packing-vector.jpg",
+    "https://img.freepik.com/premium-photo/forest-industry-illustration_250484-3002.jpg", 
+    "https://media.istockphoto.com/id/1309891661/vector/glass-production-isometric-composition.jpg?s=612x612&w=0&k=20&c=zOSGEmHi3-N7B1Yc67VQwyYTjJemdxiPabIxNlJAJg8=", 
+    "https://media.istockphoto.com/vectors/fish-farming-industry-with-conveyor-and-workers-vector-isometric-vector-id655937698?k=6&m=655937698&s=612x612&w=0&h=Hkg-HROdR20xv3JYMymWgfpOEd6GoD52aZaHc_WtLi8=", 
+    "https://www.katoennatie-staging.be/app/uploads/sites/8/2017/03/Slider-5-1920x1140.jpg",
+    "https://etimg.etb2bimg.com/photo/76276873.cms",
+    "https://th.bing.com/th/id/OIP.zVMPE9cVdR0xYhnzRXSsWQHaEo?rs=1&pid=ImgDetMain", 
+    "https://www.ranklogos.com/wp-content/uploads/2012/05/central-bank-logo-1.jpg", 
+    "https://th.bing.com/th/id/OIP.7jY49DLkpWRI04Gd59QyAgHaGx?rs=1&pid=ImgDetMain"
+];
+
+// Slide navigation and population logic
+let currentSlide = 1;
+const totalSlides = 3; // Adjust this according to the number of slides
+const boxesPerSlide = [12, 12, 15]; // Adjust according to the number of items per slide
+
+function createBox(name, image) {
+    const box = document.createElement('div');
+    box.className = 'box';
+
+    const img = document.createElement('img');
+    img.src = image;
+    img.alt = name;
+    box.appendChild(img);
+
+    const p = document.createElement('p');
+    p.textContent = name;
+    box.appendChild(p);
+
+    const button = document.createElement('button');
+    button.textContent = "View Details";
+    button.onclick = function() {
+        const currentUrl = window.location.href;
+        window.location.href = `details.html?name=${encodeURIComponent(name)}&country=${encodeURIComponent(selectedCountry)}&previousPage=${encodeURIComponent(currentUrl)}`;
+    };
+
+    box.appendChild(button);
+
+    return box;
+}
+
+function populateSlides() {
+    let currentSlideIndex = 0;
+
+    for (let slideIndex = 1; slideIndex <= totalSlides; slideIndex++) {
+        const slide = document.getElementById(`slide${slideIndex}`);
+        let boxesOnThisSlide = 0;
+        const maxBoxes = boxesPerSlide[slideIndex - 1]; 
+
+        while (currentSlideIndex < names.length && boxesOnThisSlide < maxBoxes) {
+            const name = names[currentSlideIndex];
+            const image = images[currentSlideIndex];
+            slide.appendChild(createBox(name, image));
+            currentSlideIndex++;
+            boxesOnThisSlide++;
+        }
+    }
+}
+
+function showSlide(slideIndex) {
+    const slides = document.querySelectorAll('.container');
+    slides.forEach((slide, index) => {
+        slide.classList.remove('active');
+        if (index + 1 === slideIndex) {
+            slide.classList.add('active');
+        }
+    });
+}
+
+function nextSlide() {
+    currentSlide = currentSlide < totalSlides ? currentSlide + 1 : 1;
+    showSlide(currentSlide);
+}
+
+function prevSlide() {
+    currentSlide = currentSlide > 1 ? currentSlide - 1 : totalSlides;
+    showSlide(currentSlide);
+}
+
+// Initialize slides
+populateSlides();
+showSlide(currentSlide);
+
+</script>
+</body>
+</html>

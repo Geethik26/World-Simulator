@@ -5,67 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Details Page</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            background-color: #f0f0f0;
-            padding: 20px;
-        }
-        .details {
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 20px;
-            max-width: 600px;
-            text-align: center;
-        }
-        .details img {
-            width: 100%;
-            height: auto;
-            border-bottom: 1px solid #ccc;
-            margin-bottom: 10px;
-        }
-        .details h1 {
-            margin: 0 0 20px;
-        }
-        .details p {
-            margin: 10px 0;
-        }
-        .sub-boxes {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-        }
-        .sub-box {
-            background-color: #f9f9f9;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px;
-            width: 45%;
-            text-align: center;
-        }
-        .sub-box img {
-            width: 100%;
-            height: auto;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-        .sub-box p {
-            margin: 10px 0;
-            font-size: 14px;
-        }
-        .sub-box button {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    background-color: #f0f0f0;
+    padding: 20px;
+    height: 100vh;
+}
+
+.details {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    width: 90%;
+    max-width: 1200px;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.details img {
+    width: 100%;
+    height: auto;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 10px;
+}
+
+.details h1 {
+    margin: 0 0 20px;
+}
+
+.details p {
+    margin: 10px 0;
+    text-align: justify;
+}
+
+.sub-boxes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.sub-box {
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    width: 45%;
+    text-align: center;
+}
+
+.sub-box img {
+    width: 150px;
+    height: 150px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.sub-box p {
+    margin: 10px 0;
+    font-size: 25px;
+    text-align: center;
+}
+
+.sub-box button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#previousPageButton {
+    margin-top: 20px;
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#previousPageButton:hover {
+    background-color: #0056b3;
+}
+
     </style>
 </head>
 <body>
@@ -75,11 +109,48 @@
         <p id="detail-description">Description about the selected item.</p>
         <div id="sub-boxes" class="sub-boxes"></div>
     </div>
+
+    <button id="previousPageButton">Previous Page</button>
+
     <script>
-        
         function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
+        }
+
+        function displayDetails(name, detail) {
+            document.getElementById('detail-title').textContent = name;
+            document.getElementById('detail-description').textContent = detail.description;
+            document.getElementById('detail-image').src = detail.image || name.toLowerCase().replace(/\s+/g, '') + ".jpg";
+
+            const subBoxesContainer = document.getElementById('sub-boxes');
+            subBoxesContainer.innerHTML = "";
+
+            if (detail.subBoxes) {
+                detail.subBoxes.forEach(subBox => {
+                    const subBoxElement = document.createElement('div');
+                    subBoxElement.className = 'sub-box';
+
+                    const subBoxImage = document.createElement('img');
+                    subBoxImage.src = subBox.image;
+                    subBoxElement.appendChild(subBoxImage);
+
+                    const subBoxDescription = document.createElement('p');
+                    subBoxDescription.textContent = subBox.description;
+                    subBoxElement.appendChild(subBoxDescription);
+
+                    const subBoxCost = document.createElement('p');
+                    subBoxCost.className = 'cost';
+                    subBoxCost.textContent = `Cost: ${subBox.cost}`;
+                    subBoxElement.appendChild(subBoxCost);
+
+                    const subBoxButton = document.createElement('button');
+                    subBoxButton.textContent = subBox.buttonLabel;
+                    subBoxElement.appendChild(subBoxButton);
+
+                    subBoxesContainer.appendChild(subBoxElement);
+                });
+            }
         }
 
        
@@ -89,36 +160,91 @@
         description: "This is a detailed description of Ideology. It represents the belief systems that influence society.",
         subBoxes: [
             { 
-                name: "Ideology Concept 1", 
-                description: "This concept explores the fundamentals of Ideology 1.", 
-                image: "concept1.jpg", 
-                buttonLabel: "Learn More" 
+                name: "Capitalism", 
+                description: "Capitalism", 
+                image: "https://th.bing.com/th/id/R.dbe94091998ed6849c0880676b132c26?rik=sEc4Xts8DDSMSg&pid=ImgRaw&r=0", 
+                buttonLabel: "Chosen" 
             },
             { 
-                name: "Ideology Concept 2", 
-                description: "This concept focuses on the implications of Ideology 2.", 
-                image: "concept2.jpg", 
-                buttonLabel: "Discover More" 
+                name: "Communism", 
+                description: "Communism", 
+                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Hammer_and_sickle.svg/255px-Hammer_and_sickle.svg.png", 
+                buttonLabel: "choose" 
+            },
+            { 
+                name: "Democracy", 
+                description: "Democracy", 
+                image: "https://www.globalresearch.ca/wp-content/uploads/2016/07/democracy.jpeg", 
+                buttonLabel: "choose" 
+            },
+            { 
+                name: "Autocracy", 
+                description: "Autocracy", 
+                image: "https://th.bing.com/th/id/OIP.Lq5GeJhw5e0V1-7UpKS5sQHaFj?rs=1&pid=ImgDetMain", 
+                buttonLabel: "choose" 
+            },
+            { 
+                name: "Fascism", 
+                description: "Fascism", 
+                image: "https://media.meer.com/attachments/e54d4253d83f2808c225433d54f1fcb240ec0bc1/store/fill/1090/613/87734015fce3eeb630bdd3931d05ea6cb3abd07729e83af55fdacf619e76/Fascism-is-rising-around-the-world.jpg", 
+                buttonLabel: "choose" 
+            },
+            { 
+                name: "Monarchy", 
+                description: "Monarchy", 
+                image: "https://i.pinimg.com/originals/4b/3c/c6/4b3cc62c92e515dd3ec7c2beeee361a9.jpg", 
+                buttonLabel: "choose" 
             }
         ]
     },
-    "Energy industry": {
-        description: "This is a detailed description of the Energy Industry. It involves the production and sale of energy.",
-        subBoxes: [
-            { 
-                name: "Energy Concept 1", 
-                description: "Exploration of renewable energy sources.", 
-                image: "energy1.jpg", 
-                buttonLabel: "Explore" 
+
+    "Energy Industry": {
+                description: "This is a detailed description of the Energy Industry. It involves the production and sale of energy.",
+                subBoxes: [
+                    { 
+                        name: "Nuclear PowerPlant", 
+                        description: "Nuclear PowerPlant", 
+                        image: "https://cdn01.dailycaller.com/wp-content/uploads/2018/07/Nuclear-Plant-e1531320611363.jpg", 
+                        buttonLabel: "Build",
+                        cost: "$10,000,000,000"
+                    },
+                    { 
+                        name: "Hydro PowerPlant", 
+                        description: "Hydro PowerPlant", 
+                        image: "https://th.bing.com/th/id/R.819deba9661a779a5d47822c1f2c48a2?rik=PNoSBiKzTGKHCQ&pid=ImgRaw&r=0&sres=1&sresct=1", 
+                        buttonLabel: "Build",
+                        cost: "$5,000,000,000"
+                    },
+                    { 
+                        name: "Thermal PowerPlant", 
+                        description: "Thermal PowerPlant", 
+                        image: "https://th.bing.com/th/id/OIP.ftI98mvt_N_6CPUmT9wxQAHaEK?rs=1&pid=ImgDetMain", 
+                        buttonLabel: "Build",
+                        cost: "$3,000,000,000"
+                    },
+                    { 
+                        name: "Solar PowerPlant", 
+                        description: "Solar PowerPlant", 
+                        image: "https://th.bing.com/th/id/R.6e75db6a4bd51aef528bd0321988d445?rik=NByuFQScTrLnsQ&riu=http%3a%2f%2fen.cnste.org%2fuploads%2fallimg%2f200228%2f1-20022Q0342V35.jpg&ehk=8gYRn%2bliZoAT7cL4AzXjCXXF88lh9Tf8OB1iV94ZDDc%3d&risl=&pid=ImgRaw&r=0", 
+                        buttonLabel: "Build",
+                        cost: "$2,000,000,000"
+                    },
+                    { 
+                        name: "Wind PowerPlant", 
+                        description: "Wind PowerPlant", 
+                        image: "https://th.bing.com/th/id/OIP.nAnoPsWtQwfkBMXS6MnaFgHaEs?rs=1&pid=ImgDetMain", 
+                        buttonLabel: "Build",
+                        cost: "$1,500,000,000"
+                    },
+                    { 
+                        name: "Fossil Fuel PowerPlant", 
+                        description: "Fossil Fuel PowerPlant", 
+                        image: "https://upload.wikimedia.org/wikipedia/commons/d/d6/Coal_power_plant_Datteln_2_Crop1.png", 
+                        buttonLabel: "Build",
+                        cost: "$8,000,000,000"
+                    }
+                ]
             },
-            { 
-                name: "Energy Concept 2", 
-                description: "An overview of fossil fuels.", 
-                image: "energy2.jpg", 
-                buttonLabel: "Learn More" 
-            }
-        ]
-    },
     "Ecology": {
         description: "This is a detailed description of Ecology. It focuses on the relationships between living organisms and their environment.",
         subBoxes: [
@@ -536,12 +662,20 @@ function displayDetails(name, detail) {
 
        
         const name = getQueryParam('name');
-        console.log("Query parameter name:", name);  
-
         if (name) {
-            const detail = detailsMap[name] || null;
+            const detail = detailsMap[name];
             displayDetails(name, detail);
         }
+
+        // Handle the "Previous Page" button click
+        document.getElementById('previousPageButton').onclick = function() {
+            const previousPage = getQueryParam('previousPage');
+            if (previousPage) {
+                window.location.href = decodeURIComponent(previousPage);
+            } else {
+                history.back(); // Fallback to the browser's history
+            }
+        };
     </script>
 </body>
 </html>
