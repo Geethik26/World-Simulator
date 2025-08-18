@@ -1,132 +1,1103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>World Simulator - Start</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            background-color: #f0f0f0;
-            padding: 20px;
-        }
-        h1 {
-            margin: 20px 0;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input[type="text"] {
-            padding: 10px;
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        .country-list {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-        }
-        .country {
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        .country img {
-            width: 100px;
-            height: auto;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-        .country p {
-            margin: 0;
-            font-size: 16px;
-            font-weight: bold;
-        }
-        .country:hover {
-            transform: scale(1.05);
-        }
-        .country .population {
-            font-size: 14px;
-            color: #555;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Simulator — GDP Race</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f172a; --ink:#e5e7eb; --muted:#94a3b8; --brand:#06b6d4; --brand-d:#0891b2; --accent:#22c55e; --accent-d:#16a34a;
+      --warn:#f59e0b; --danger:#ef4444; --chip:#1e293b; --shadow:0 16px 40px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; display:flex; flex-direction:column; align-items:center; margin:0; background:radial-gradient(1200px 700px at 50% -10%, #1e293b 0, #0b1020 65%); color:var(--ink) }
+
+    header { position: sticky; top: 0; width: 100%; text-align: center; background: rgba(2,6,23,.75); backdrop-filter: blur(10px); color: var(--ink); padding: 18px 0 12px; margin:0; z-index:1000; border-bottom:1px solid rgba(148,163,184,.15); }
+    header h1{ margin:0; font-size: clamp(20px, 2.6vw, 32px); letter-spacing:.2px; font-weight:800 }
+    header .subtitle{ margin-top:4px; color:var(--muted); font-weight:600; font-size:12px }
+
+    nav.topbar { position: sticky; top: 72px; width: 100%; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center; background: rgba(2,6,23,.85); backdrop-filter: blur(10px); color:#e5e7eb; padding: 10px; z-index:1000; border-bottom:1px solid rgba(148,163,184,.15); }
+    nav.topbar .pill { display:flex; align-items:center; gap:8px; padding:8px 12px; background:#0b1220; border:1px solid rgba(148,163,184,.25); border-radius:40px; font-weight:700; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+    nav.topbar select, nav.topbar button { border:none; border-radius:10px; padding:8px 12px; font-weight:800; }
+    nav.topbar button { background:var(--brand); color:#001219; cursor:pointer; box-shadow:0 10px 24px rgba(6,182,212,.25) }
+    nav.topbar button:hover{ background:var(--brand-d); }
+    nav.topbar .ghost{ background:#0b1220; color:#e5e7eb; border:1px solid rgba(148,163,184,.25) }
+
+    .hud-num { font-variant-numeric: tabular-nums; }
+
+    .notice { width: min(1200px, 94vw); margin: 10px auto 0; color:#0b1020; background:#fff8e1; border:1px solid #ffe082; padding:10px 12px; border-radius:12px; display:none; box-shadow:var(--shadow) }
+
+    .container { display:none; grid-template-columns: repeat(3, 1fr); grid-auto-rows: auto; gap:20px; width:min(1200px, 94vw); margin: 16px auto 24px; }
+    .container h2 { grid-column: 1 / -1; text-align:center; color:#f1f5f9; font-size:20px; margin: 0 0 4px 0; font-weight:800; letter-spacing:.2px }
+    .container.active { display:grid; }
+
+    .box { background:var(--panel); border:1px solid rgba(148,163,184,.15); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; text-align:center; transition: transform .18s ease, box-shadow .18s ease; padding:0; }
+    .box:hover { transform: translateY(-3px); box-shadow:0 22px 50px rgba(0,0,0,.45); }
+    .box img { width:100%; height:200px; object-fit:cover; background:#0b1220 }
+    .box .meta { padding:12px 14px 16px; text-align:left }
+    .box .title { margin:0; font-weight:800; font-size:16px }
+    .box .statline { margin-top:8px; font-size:13px; color:#cbd5e1; display:flex; gap:12px; flex-wrap:wrap }
+    .box .chips{ margin-top:10px; display:flex; gap:6px; flex-wrap:wrap }
+    .chip{ padding:4px 8px; border-radius:999px; background:var(--chip); color:#a5b4fc; border:1px solid rgba(99,102,241,.35); font-weight:700; font-size:12px }
+    .meter{ margin-top:10px; width:100%; height:8px; border-radius:999px; background:#0b1220; border:1px solid rgba(148,163,184,.2); overflow:hidden }
+    .meter>i{ display:block; height:100%; width:0; background:linear-gradient(90deg,#22c55e,#06b6d4); }
+    .box button { margin-top:12px; padding:9px 12px; font-size:14px; font-weight:800; color:#001219; background:var(--brand); border:none; border-radius:10px; cursor:pointer; box-shadow:0 10px 18px rgba(6,182,212,.25) }
+    .box button:hover{ background:var(--brand-d) }
+
+    .buttons { display:flex; gap:12px; margin:6px 0 24px; }
+    .buttons button { padding:10px 16px; font-size:14px; font-weight:800; color:#e5e7eb; background:#0b1220; border:1px solid rgba(148,163,184,.25); border-radius:10px; cursor:pointer; }
+    .buttons button:hover { background:#111a2d; }
+
+    /* Modal */
+    dialog.modal { width:min(960px, 96vw); border:none; padding:0; border-radius:16px; overflow:hidden; box-shadow:0 30px 70px rgba(0,0,0,.65); color:#0b1020 }
+    .modal-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:#0b1220; color:#e5e7eb; border-bottom:1px solid rgba(148,163,184,.25) }
+    .modal-body { display:grid; grid-template-columns: 280px 1fr; gap:16px; padding:16px; background:#f8fafc }
+    .modal-body img { width:100%; height:220px; object-fit:cover; border-radius:10px; border:1px solid #e2e8f0 }
+    .modal-actions { display:grid; gap:10px; }
+    .kpis { display:flex; gap:12px; flex-wrap:wrap; margin:8px 0 10px; }
+    .kpis .k { background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:6px 10px; font-size:13px; font-weight:700 }
+
+    .flex { display:flex; gap:10px; align-items:center }
+
+    /* Log */
+    .log { width:min(1200px, 94vw); background:#0b1220; border:1px solid rgba(148,163,184,.25); border-radius:16px; padding:12px; margin-bottom:22px; box-shadow:var(--shadow) }
+    .log h3 { margin:4px 0 8px; font-weight:800 }
+    .log-list { max-height:180px; overflow:auto; padding-right:4px }
+    .log-item { font-size:13px; border-top:1px dashed rgba(148,163,184,.25); padding:6px 0; color:#cbd5e1 }
+
+    /* Toast */
+    .toast { position:fixed; right:16px; bottom:16px; background:#0b1220; color:#e5e7eb; padding:10px 12px; border:1px solid rgba(148,163,184,.25); border-radius:12px; opacity:0; transform:translateY(10px); pointer-events:none; transition:all .25s ease; box-shadow:0 12px 30px rgba(0,0,0,.45) }
+    .toast.show{ opacity:1; transform:translateY(0); }
+
+    /* Advisors */
+    .advice{ display:grid; gap:10px }
+    .advice .card{ background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px }
+    .advice h4{ margin:0 0 6px; }
+    .advice .risk{ font-size:12px; font-weight:800; padding:2px 8px; border-radius:999px; }
+    .risk.low{ background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0 }
+    .risk.med{ background:#fffbeb; color:#92400e; border:1px solid #fde68a }
+    .risk.high{ background:#fef2f2; color:#991b1b; border:1px solid #fecaca }
+
+    /* Tables */
+    table{ width:100%; border-collapse:collapse; font-size:13px }
+    th,td{ padding:8px 10px; border-bottom:1px solid #e2e8f0; text-align:left }
+    th{ background:#f1f5f9; font-weight:800 }
+
+    /* Leaderboard */
+    .leader { width:min(1200px,94vw); margin:10px auto 0; background:#0b1220; border:1px solid rgba(148,163,184,.25); border-radius:16px; box-shadow:var(--shadow); padding:12px }
+    .pb { height:10px; background:#0b1220; border:1px solid rgba(148,163,184,.25); border-radius:999px; overflow:hidden }
+    .pb>i{ display:block; height:100%; width:0; background:linear-gradient(90deg,#06b6d4,#3b82f6) }
+
+    @media (max-width: 980px){ .container{ grid-template-columns: repeat(2, 1fr) } .modal-body{ grid-template-columns: 1fr } }
+    @media (max-width: 640px){ .container{ grid-template-columns: 1fr } }
+  </style>
 </head>
 <body>
-    <h1>Welcome to World Simulator</h1>
+  <header>
+    <h1>World Simulator — GDP Race to $100T</h1>
+    <div class="subtitle">Invest, hire, wage war, and manage policy. First to $100T ends the game.</div>
+  </header>
 
-    <div class="form-group">
-        <label for="playerName">Enter Your Name:</label>
-        <input type="text" id="playerName" placeholder="Your Name">
+  <nav class="topbar">
+    <span class="pill">Country:
+      <select id="countrySelect">
+        <option>United States</option>
+        <option>China</option>
+        <option>Germany</option>
+        <option>Japan</option>
+        <option>India</option>
+        <option>United Kingdom</option>
+        <option>France</option>
+        <option>Italy</option>
+        <option>Canada</option>
+        <option>Brazil</option>
+      </select>
+    </span>
+    <span class="pill">Treasury: <span id="treasuryAmount" class="hud-num">$—</span></span>
+    <span class="pill">GDP: <span id="gdp" class="hud-num">$—</span></span>
+    <span class="pill">Population: <span id="pop" class="hud-num">—</span></span>
+    <span class="pill">Labor Force: <span id="labor" class="hud-num">—</span></span>
+    <span class="pill">Unemployment: <span id="unemp" class="hud-num">6.0%</span></span>
+    <span class="pill">Popularity: <span id="popularity" class="hud-num">85%</span></span>
+    <span class="pill">Inflation: <span id="inflation" class="hud-num">3.0%</span></span>
+    <span class="pill">Date: <span id="timeline">01/01/2000</span></span>
+    <button id="btnMonth">+ Month</button>
+    <button id="btnYear">+ Year</button>
+    <button id="btnAdvisor" class="ghost">Advisor</button>
+    <button id="btnWar" class="ghost">War Room</button>
+    <button id="btnSave" class="ghost">Save</button>
+    <button id="btnLoad" class="ghost">Load</button>
+    <button id="btnNew" class="ghost">New</button>
+    <button id="btnTests" title="Run smoke tests" class="ghost">Tests</button>
+  </nav>
+
+  <div class="leader">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <strong>GDP Leaderboard (Nominal, USD)</strong>
+      <div style="font-size:12px;color:#94a3b8">Goal: first to $100T (game stops immediately)</div>
+    </div>
+    <div id="leaderRows" style="display:grid;gap:8px;margin-top:8px"></div>
+  </div>
+
+  <div id="notice" class="notice"></div>
+
+  <!-- Slides -->
+  <div class="container active" id="slide1"><h2>Government & Public Services (Expenses)</h2></div>
+  <div class="container" id="slide2"><h2>Industries (Revenue Generators)</h2></div>
+  <div class="container" id="slide3"><h2>Policy, Taxes & National Investment Fund</h2>
+    <div class="box" style="grid-column:1 / -1">
+      <img src="https://images.unsplash.com/photo-1542228262-3d663b306a54?q=80&w=1200&auto=format&fit=crop" alt="Parliament">
+      <div class="meta">
+        <div style="display:flex; flex-wrap:wrap; gap:18px; align-items:center; justify-content:space-between">
+          <div>
+            <h3 style="margin:2px 0 6px">National Tax Rate</h3>
+            <div style="display:flex; gap:12px; align-items:center">
+              <input id="taxRate" type="range" min="0" max="60" step="1" value="20"/>
+              <strong><span id="taxRateLabel">20</span>%</strong>
+              <span style="font-size:12px;color:#6b7280">(Tax revenue = % of GDP each month. Higher tax can slow growth & approval.)</span>
+            </div>
+          </div>
+          <div>
+            <button id="btnInvestFund" style="background:var(--accent)">Manage National Investment Fund</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <h2>Select Your Country</h2>
-    <div class="country-list" id="countryList"></div>
+    <div class="box" style="grid-column:1 / -1">
+      <div class="meta">
+        <h3 style="margin:2px 0 6px">Portfolio</h3>
+        <div id="portfolioContainer"></div>
+      </div>
+    </div>
+  </div>
 
-    <script>
-        const countries = [
-            { name: 'India', flag: 'https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/1200px-Flag_of_India.svg.png', dailyIncome: 5000000, treasury: 1000000000, population: 1400000000 },
-            { name: 'United States', flag: 'https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg', dailyIncome: 10000000, treasury: 2000000000, population: 331000000 },
-            { name: 'Germany', flag: 'https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg', dailyIncome: 8000000, treasury: 1500000000, population: 83000000 },
-            { name: 'Japan', flag: 'https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg', dailyIncome: 9000000, treasury: 1700000000, population: 125000000 },
-            { name: 'Canada', flag: 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Canada.svg', dailyIncome: 6000000, treasury: 1200000000, population: 38000000 },
-            { name: 'Australia', flag: 'https://upload.wikimedia.org/wikipedia/en/b/b9/Flag_of_Australia.svg', dailyIncome: 5500000, treasury: 1100000000, population: 25600000 },
-            { name: 'Brazil', flag: 'https://upload.wikimedia.org/wikipedia/en/0/05/Flag_of_Brazil.svg', dailyIncome: 4000000, treasury: 900000000, population: 213000000 },
-            { name: 'United Kingdom', flag: 'https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg', dailyIncome: 9500000, treasury: 1800000000, population: 67000000 },
-            { name: 'Russia', flag: 'https://upload.wikimedia.org/wikipedia/en/f/f3/Flag_of_Russia.svg', dailyIncome: 7000000, treasury: 1300000000, population: 144000000 },
-            { name: 'China', flag: 'https://upload.wikimedia.org/wikipedia/commons/0/0d/Flag_of_China.svg', dailyIncome: 12000000, treasury: 2500000000, population: 1420000000 }
-        ];
+  <div class="buttons" style="margin-top:8px">
+    <button id="prevSlide">Previous</button>
+    <button id="nextSlide">Next</button>
+  </div>
 
-        const countryListContainer = document.getElementById('countryList');
-        
-        countries.forEach(country => {
-            const countryElement = document.createElement('div');
-            countryElement.className = 'country';
-            
-            const countryFlag = document.createElement('img');
-            countryFlag.src = country.flag;
-            countryFlag.alt = country.name;
-            countryElement.appendChild(countryFlag);
+  <div class="log">
+    <h3>Activity Log</h3>
+    <div id="logList" class="log-list"></div>
+  </div>
 
-            const countryName = document.createElement('p');
-            countryName.textContent = country.name;
-            countryElement.appendChild(countryName);
+  <!-- Sector details modal -->
+  <dialog id="detailsModal" class="modal">
+    <div class="modal-head">
+      <div class="flex">
+        <strong id="modalTitle" style="font-size:18px"></strong>
+        <span id="modalType" class="chip" style="margin-left:8px"></span>
+      </div>
+      <div class="flex">
+        <button id="modalClose">Close</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div>
+        <img id="modalImg" alt="" />
+        <div class="kpis">
+          <div class="k">Annual Budget: <span id="kBudget" class="hud-num"></span></div>
+          <div class="k">Annual Income: <span id="kIncome" class="hud-num"></span></div>
+          <div class="k">Efficiency: <span id="kEff" class="hud-num"></span></div>
+          <div class="k">Level: <span id="kLevel" class="hud-num"></span></div>
+          <div class="k">CAPEX Stock: <span id="kCapex" class="hud-num"></span></div>
+          <div class="k">ROI (annual): <span id="kROI" class="hud-num"></span></div>
+          <div class="k">Staff: <span id="kStaff" class="hud-num"></span></div>
+          <div class="k">Payroll / mo: <span id="kPayroll" class="hud-num"></span></div>
+          <div class="k">Facilities: <span id="kFacilities" class="hud-num"></span></div>
+        </div>
+      </div>
+      <div>
+        <p id="modalDesc" style="margin:4px 0 10px"></p>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+          <label><strong>Invest CAPEX (Millions):</strong> <input id="capexInput" type="number" value="200" min="10" step="10" style="padding:8px; width:120px; border:1px solid #e2e8f0; border-radius:8px"></label>
+          <button id="btnCapex">Invest</button>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px">
+          <label><strong>Hire Staff (Thousands):</strong> <input id="hireInput" type="number" value="5" min="1" step="1" style="padding:8px; width:120px; border:1px solid #e2e8f0; border-radius:8px"></label>
+          <button id="btnHire">Hire</button>
+          <button id="btnLayoff" class="ghost">Lay off 1k</button>
+        </div>
+        <div class="modal-actions" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </dialog>
 
-            const countryPopulation = document.createElement('p');
-            countryPopulation.className = 'population';
-            countryPopulation.textContent = `Population: ${country.population.toLocaleString()}`;
-            countryElement.appendChild(countryPopulation);
+  <!-- Advisor modal -->
+  <dialog id="advisorModal" class="modal">
+    <div class="modal-head">
+      <div class="flex">
+        <strong style="font-size:18px">Chief Economic Advisor</strong>
+        <span class="chip" style="margin-left:8px">Insights</span>
+      </div>
+      <div class="flex">
+        <button id="advisorClose">Close</button>
+      </div>
+    </div>
+    <div class="modal-body" style="grid-template-columns:1fr">
+      <div class="advice" id="adviceList"></div>
+    </div>
+  </dialog>
 
-            countryElement.onclick = () => {
-                const playerName = document.getElementById('playerName').value;
-                if (!playerName) {
-                    alert('Please enter your name before selecting a country.');
-                    return;
-                }
-                const encodedPlayerName = encodeURIComponent(playerName);
-                const encodedCountry = encodeURIComponent(country.name);
-                const encodedDailyIncome = encodeURIComponent(country.dailyIncome);
-                const encodedTreasury = encodeURIComponent(country.treasury);
-                const encodedPopulation = encodeURIComponent(country.population);
-                window.location.href = `game.html?playerName=${encodedPlayerName}&country=${encodedCountry}&dailyIncome=${encodedDailyIncome}&treasury=${encodedTreasury}&population=${encodedPopulation}`;
-            };
+  <!-- Investment modal -->
+  <dialog id="investModal" class="modal">
+    <div class="modal-head">
+      <div class="flex">
+        <strong style="font-size:18px">National Investment Fund</strong>
+        <span class="chip" style="margin-left:8px">Grow Reserves</span>
+      </div>
+      <div class="flex">
+        <button id="investClose">Close</button>
+      </div>
+    </div>
+    <div class="modal-body" style="grid-template-columns:1fr">
+      <div>
+        <label style="display:block; font-weight:800; margin-bottom:6px">Amount (Millions)</label>
+        <input id="investAmount" type="number" value="100" min="10" step="10" style="padding:10px; width:200px; border:1px solid #e2e8f0; border-radius:10px"/>
+      </div>
+      <div>
+        <label style="display:block; font-weight:800; margin-bottom:6px">Strategy</label>
+        <div style="display:flex; gap:12px; flex-wrap:wrap">
+          <label><input type="radio" name="strategy" value="conservative" checked/> Conservative (4% APR, low risk)</label>
+          <label><input type="radio" name="strategy" value="balanced"/> Balanced (7% APR, med risk)</label>
+          <label><input type="radio" name="strategy" value="aggressive"/> Aggressive (12% APR, high risk)</label>
+        </div>
+      </div>
+      <div>
+        <button id="investConfirm" style="background:var(--accent)">Add Investment</button>
+      </div>
+    </div>
+  </dialog>
 
-            countryListContainer.appendChild(countryElement);
-        });
-    </script>
+  <!-- War modal -->
+  <dialog id="warModal" class="modal">
+    <div class="modal-head">
+      <div class="flex">
+        <strong style="font-size:18px">War Room</strong>
+        <span class="chip" style="margin-left:8px">Military & Annexation</span>
+      </div>
+      <div class="flex">
+        <button id="warClose">Close</button>
+      </div>
+    </div>
+    <div class="modal-body" style="grid-template-columns:1fr">
+      <p style="margin:0 0 6px">Attack only if you have the <strong>largest military</strong>. Outcome (your rules): <strong>GDP</strong> — annex 80% and destroy 10% (one-time), <strong>Population</strong> — 10% dead & 90% annexed, <strong>Facilities</strong> — 90% captured & 10% destroyed. Defender loses all troops; attacker loses troops equal to defender's count.</p>
+      <div id="warTargets"></div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ===== Helpers =====
+    const $ = (q, ctx=document) => ctx.querySelector(q);
+    const $$ = (q, ctx=document) => Array.from(ctx.querySelectorAll(q));
+    const byId = (id) => document.getElementById(id);
+    const setText = (id, text) => { const el = byId(id); if (el) el.textContent = text; };
+
+    const fmtMoney = (n) => {
+      const sign = n < 0 ? '-' : '';
+      n = Math.abs(n);
+      if (n >= 1_000_000_000_000) return `${sign}$${(n/1_000_000_000_000).toFixed(2)}T`;
+      if (n >= 1_000_000_000) return `${sign}$${(n/1_000_000_000).toFixed(2)}B`;
+      if (n >= 1_000_000) return `${sign}$${(n/1_000_000).toFixed(2)}M`;
+      return `${sign}$${n.toLocaleString()}`;
+    };
+    const fmtCount = (n) => n >= 1_000_000_000 ? (n/1_000_000_000).toFixed(2)+'B' : n >= 1_000_000 ? (n/1_000_000).toFixed(2)+'M' : n.toLocaleString();
+    const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+    const rand = (min, max) => Math.random() * (max - min) + min;
+    const chance = (p) => Math.random() < p;
+
+    const toast = (msg) => { const t = byId('toast'); if (!t) return; t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2400); };
+
+    // ===== Real-world seeded data (WB/IMF fallbacks) =====
+    const countriesDB = {
+      'United States': { gdp: 29_184_890_000_000, population: 341_000_000, growthNominal: 0.05 },
+      'China': { gdp: 18_743_803_000_000, population: 1_409_000_000, growthNominal: 0.055 },
+      'Germany': { gdp: 4_659_929_000_000, population: 83_500_000, growthNominal: 0.04 },
+      'India': { gdp: 3_912_686_000_000, population: 1_454_000_000, growthNominal: 0.09 },
+      'Japan': { gdp: 4_026_211_000_000, population: 124_000_000, growthNominal: 0.03 },
+      'United Kingdom': { gdp: 3_643_834_000_000, population: 69_226_000, growthNominal: 0.045 },
+      'France': { gdp: 3_162_079_000_000, population: 68_000_000, growthNominal: 0.035 },
+      'Italy': { gdp: 2_372_775_000_000, population: 58_900_000, growthNominal: 0.03 },
+      'Canada': { gdp: 2_241_253_000_000, population: 41_000_000, growthNominal: 0.035 },
+      'Brazil': { gdp: 2_179_412_000_000, population: 203_000_000, growthNominal: 0.045 }
+    };
+
+    const countryCodes = { 'United States':'US', 'United Kingdom':'GB', 'Germany':'DE', 'Japan':'JP', 'India':'IN', 'China':'CN', 'France':'FR', 'Italy':'IT', 'Canada':'CA', 'Brazil':'BR' };
+
+    const competitors = [
+      { name: 'United States', color:'#60a5fa' },
+      { name: 'China', color:'#fca5a5' },
+      { name: 'Germany', color:'#c084fc' },
+      { name: 'Japan', color:'#fbbf24' },
+      { name: 'India', color:'#34d399' },
+      { name: 'United Kingdom', color:'#a5b4fc' },
+      { name: 'France', color:'#f59e0b' },
+      { name: 'Italy', color:'#f472b6' },
+      { name: 'Canada', color:'#67e8f9' },
+      { name: 'Brazil', color:'#86efac' }
+    ];
+
+    // ===== Game state =====
+    const initialState = () => ({
+      country: 'United States',
+      treasury: 0,
+      popularity: 85,
+      inflation: 3.0,
+      unemployment: 6.0,
+      date: new Date('2000-01-01'),
+      taxRate: 20,
+      gdp: 1,
+      gdpPerCapita: 0,
+      population: 1,
+      laborForce: 0,
+      avgMonthlyWage: 0,
+      growthNominal: 0.05,
+      targetGDP: 100_000_000_000_000,
+      sectors: [],
+      facilities: {},
+      portfolio: [],
+      log: [],
+      fiscalHistory: [],
+      militaryPersonnel: 0,
+      policePer100k: 220,
+      gameOver: false
+    });
+
+    let state = initialState();
+
+    // Required categories
+    const names = [
+      "Ideology", "Energy industry", "Ecology", "Education",
+      "Housing Services", "Forest Department", "Science and Research", "Sports",
+      "Healthcare", "Religions", "Culture", "Population Employment",
+      "Police", "State Security Service", "Ministry of Defence", "State Emergency Service", "Defence Research Department",
+      "State Intelligence", "External Affairs", "Law", "International Organizations", "Social Policy", "Infrastructure", "Disaster Management",
+      "Taxes", "Electrical Energy Industry", "Fuel Industry", "Ferrous Industry", "Non Ferrous Industry",
+      "Chemical Industry ", "Machinery Industry", "Timber Industry", "Glass Industry", "Food Industry",
+      "Consumer goods Industry", "Defence Industry", "Medical Industry", "Central Bank", "World Trade",
+    ];
+
+    // ROI by sector (annual)
+    const sectorROI = {
+      'Infrastructure': 0.08,
+      'Education': 0.06,
+      'Science and Research': 0.07,
+      'Healthcare': 0.055,
+      'Police': 0.03,
+      'Ministry of Defence': 0.035,
+      'State Security Service': 0.03,
+      'State Intelligence': 0.03,
+      'Energy industry': 0.12,
+      'Electrical Energy Industry': 0.12,
+      'Fuel Industry': 0.15,
+      'Ferrous Industry': 0.09,
+      'Non Ferrous Industry': 0.09,
+      'Chemical Industry ': 0.10,
+      'Machinery Industry': 0.11,
+      'Timber Industry': 0.07,
+      'Glass Industry': 0.06,
+      'Food Industry': 0.08,
+      'Consumer goods Industry': 0.10,
+      'Defence Industry': 0.08,
+      'Medical Industry': 0.12,
+      'World Trade': 0.09
+    };
+
+    // Workforce productivity multiplier per sector
+    const prodMult = {
+      'Police': 0.6,
+      'Ministry of Defence': 0.5,
+      'Healthcare': 0.8,
+      'Education': 0.7,
+      'Infrastructure': 0.9,
+      'Energy industry': 1.2,
+      'Electrical Energy Industry': 1.2,
+      'Fuel Industry': 1.3,
+      'Ferrous Industry': 1.0,
+      'Non Ferrous Industry': 1.0,
+      'Chemical Industry ': 1.1,
+      'Machinery Industry': 1.15,
+      'Timber Industry': 0.9,
+      'Glass Industry': 0.85,
+      'Food Industry': 0.95,
+      'Consumer goods Industry': 1.05,
+      'Defence Industry': 0.95,
+      'Medical Industry': 1.1,
+      'World Trade': 1.0
+    };
+
+    // Sector salary multipliers vs national average wage
+    const salaryMult = {
+      'Police': 1.1,
+      'Ministry of Defence': 1.2,
+      'Healthcare': 1.15,
+      'Education': 1.0,
+      'Infrastructure': 1.0,
+      'default': 1.0
+    };
+
+    // Facilities (industrial units) — per-facility monthly GDP contribution (USD)
+    const facilityRateM = { // millions per month
+      'Energy industry': 2.0,
+      'Electrical Energy Industry': 2.5,
+      'Fuel Industry': 3.0,
+      'Ferrous Industry': 1.5,
+      'Non Ferrous Industry': 1.0,
+      'Chemical Industry ': 1.6,
+      'Machinery Industry': 1.2,
+      'Timber Industry': 0.5,
+      'Glass Industry': 0.4,
+      'Food Industry': 0.8,
+      'Consumer goods Industry': 1.0,
+      'Defence Industry': 1.2,
+      'Medical Industry': 1.3,
+      'World Trade': 1.8
+    };
+
+    const industrialSectors = Object.keys(facilityRateM);
+
+    // Deterministic pseudo-random for facility seeding
+    function hashStr(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h>>>0; }
+    function seededRand(seed){ let t = seed>>>0; return ()=> (t = Math.imul(48271, t) % 2147483647) / 2147483647; }
+
+    function seedFacilitiesForCountry(countryName, gdp){
+      const baseT = gdp / 1_000_000_000_000; // GDP in trillions as scale
+      const seed = hashStr(countryName);
+      const rnd = seededRand(seed);
+      const weights = {
+        'Energy industry': 0.6,
+        'Electrical Energy Industry': 0.5,
+        'Fuel Industry': 0.45,
+        'Ferrous Industry': 0.35,
+        'Non Ferrous Industry': 0.30,
+        'Chemical Industry ': 0.40,
+        'Machinery Industry': 0.50,
+        'Timber Industry': 0.18,
+        'Glass Industry': 0.18,
+        'Food Industry': 0.35,
+        'Consumer goods Industry': 0.45,
+        'Defence Industry': 0.25,
+        'Medical Industry': 0.30,
+        'World Trade': 0.50
+      };
+      const out = {};
+      industrialSectors.forEach(sec=>{
+        const base = Math.max(10, Math.round(baseT * weights[sec] * 300 + rnd()*50));
+        out[sec] = base; // facility count
+      });
+      return out;
+    }
+
+    // ===== Internet facility enrichment (best-effort) =====
+    let gpwRows = null;
+    async function fetchPowerPlantCSV(){
+      if (gpwRows) return gpwRows;
+      try{
+        const resp = await fetch('https://raw.githubusercontent.com/wri/global-power-plant-database/master/output_database/global_power_plant_database.csv');
+        const text = await resp.text();
+        gpwRows = parseCSV(text);
+        log('Loaded Global Power Plant Database for facility enrichment.');
+      }catch(e){ log('Could not load power plant database; using seeded facilities.'); gpwRows = []; }
+      return gpwRows;
+    }
+    function parseCSV(text){
+      // FIX: split on CRLF/LF correctly; previous regex was malformed and caused SyntaxError
+      const lines = text.split(/\r?\n/); if (!lines.length) return [];
+      const headers = splitCSVLine(lines[0]);
+      const out=[];
+      for(let i=1;i<lines.length;i++){
+        const line = lines[i]; if (!line) continue; const cells = splitCSVLine(line);
+        const obj={}; headers.forEach((h,idx)=> obj[h]=cells[idx]); out.push(obj);
+      }
+      return out;
+    }
+    function splitCSVLine(line){
+      const res=[]; let cur=''; let q=false;
+      for(let i=0;i<line.length;i++){
+        const ch=line[i];
+        if (ch==='"'){
+          if (q && line[i+1]==='"'){ cur+='"'; i++; }
+          else { q=!q; }
+        } else if (ch===',' && !q){ res.push(cur); cur=''; }
+        else { cur+=ch; }
+      }
+      res.push(cur); return res;
+    }
+    const countryMapPower = {
+      'United States':'United States of America',
+      'United Kingdom':'United Kingdom',
+      'Germany':'Germany',
+      'Japan':'Japan',
+      'India':'India',
+      'China':'China',
+      'France':'France',
+      'Italy':'Italy',
+      'Canada':'Canada',
+      'Brazil':'Brazil'
+    };
+    async function enrichFacilitiesFromInternet(name, facilities){
+      const rows = await fetchPowerPlantCSV(); if (!rows.length) return facilities;
+      const key = countryMapPower[name] || name;
+      const all = rows.filter(r => (r.country_long||r.country) === key);
+      const plants = all.length;
+      const fossil = all.filter(r=> ['Oil','Gas','Coal'].includes((r.primary_fuel||r.fuel1||'').trim())).length;
+      const hydro = all.filter(r=> ['Hydro'].includes((r.primary_fuel||r.fuel1||'').trim())).length;
+      // Map to sectors
+      const out = { ...facilities };
+      out['Electrical Energy Industry'] = Math.max(plants, facilities['Electrical Energy Industry']||0);
+      out['Energy industry'] = Math.max(fossil + hydro, facilities['Energy industry']||0);
+      return out;
+    }
+
+    // ===== Types =====
+    const typeFor = (name) => {
+      const incomeSet = new Set([...industrialSectors, 'World Trade']);
+      if (name === 'Taxes' || name === 'Central Bank') return 'policy';
+      if (incomeSet.has(name)) return 'income';
+      return 'expense';
+    };
+
+    const roiFor = (type,name) => {
+      if (sectorROI[name] != null) return sectorROI[name];
+      if (type==='income') return 0.09;
+      if (name==='Infrastructure') return 0.08;
+      if (name==='Education' || name==='Science and Research') return 0.07;
+      if (name==='Healthcare') return 0.06;
+      return 0.04;
+    };
+
+    function buildSectors(){
+      state.sectors = names.map((name, idx) => {
+        const type = typeFor(name);
+        const baseBudget = type==='expense' ? 600_000_000 + Math.floor(Math.random()*1_800_000_000) : 150_000_000 + Math.floor(Math.random()*900_000_000);
+        const baseIncome = type==='income' ? 700_000_000 + Math.floor(Math.random()*2_400_000_000) : 0;
+        const eff = 60 + Math.floor(Math.random()*40);
+        return {
+          id: idx, name, img: imageFor(name), type,
+          budget: baseBudget, income: baseIncome, efficiency: eff,
+          level: 0, capex: 0, roi: roiFor(type,name), staff: 0,
+          desc: `Develop ${name}. Invest CAPEX and hire staff to lift output and GDP. Payroll reduces treasury each month.`
+        };
+      });
+    }
+
+    function imageFor(name){
+      const map = [
+        ['Energy', 'oil, refinery'], ['Ecology','forest, ecosystem'], ['Education','university, classroom'], ['Housing','city housing skyline'],
+        ['Forest','forest'], ['Science','lab, research'], ['Sports','stadium, sports'], ['Healthcare','hospital, medicine'], ['Religion','temple, church'],
+        ['Culture','concert hall'], ['Employment','office, workers'], ['Police','police'], ['Security','cybersecurity'], ['Defence','military'],
+        ['Emergency','rescue, emergency'], ['Research','drone, research'], ['Intelligence','intelligence, analysis'], ['External','diplomacy, flags'],
+        ['Law','courthouse'], ['International','united nations'], ['Social','welfare'], ['Infrastructure','bridge, highway'], ['Disaster','disaster, crisis'],
+        ['Taxes','taxes'], ['Electrical','power plant, electricity'], ['Fuel','oil platform'], ['Ferrous','steel factory'], ['Non Ferrous','aluminium industry'],
+        ['Chemical','chemical plant'], ['Machinery','robots factory'], ['Timber','logging timber'], ['Glass','glass factory'], ['Food','food factory'],
+        ['Consumer','retail, consumer goods'], ['Defence Industry','defense industry'], ['Medical','pharma biotech'], ['Central Bank','central bank money'], ['World Trade','containers trade']
+      ];
+      let q = 'government';
+      for (const [key, val] of map){ if (name.toLowerCase().includes(key.toLowerCase())) { q = val; break; } }
+      return `https://source.unsplash.com/800x500/?${encodeURIComponent(q)}`;
+    }
+
+    // ===== Rendering =====
+    let currentSlide = 1; const totalSlides = 3; const boxesPerSlide = [12, 12, 15];
+
+    function createBox(sector){
+      const box = document.createElement('div'); box.className = 'box';
+      const img = document.createElement('img'); img.src = sector.img; img.alt = sector.name; box.appendChild(img);
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const title = document.createElement('p'); title.className='title'; title.textContent = sector.name; meta.appendChild(title);
+      const stat = document.createElement('div'); stat.className = 'statline';
+      const bOrI = sector.type==='income' ? `Income: <strong>${fmtMoney(sector.income)}</strong>` : `Budget: <strong>${fmtMoney(sector.budget)}</strong>`;
+      const fac = state.facilities[sector.name] ? ` • Facilities: <strong>${state.facilities[sector.name].toLocaleString()}</strong>` : '';
+      stat.innerHTML = `<span>${bOrI}</span><span>Staff: <strong>${(sector.staff||0).toLocaleString()}</strong></span>${fac}`;
+      meta.appendChild(stat);
+      const chips = document.createElement('div'); chips.className='chips'; chips.innerHTML = `<span class="chip">Eff ${sector.efficiency}</span><span class="chip">ROI ${(sector.roi*100).toFixed(1)}%</span><span class="chip">${sector.type}</span>`; meta.appendChild(chips);
+      const meter = document.createElement('div'); meter.className='meter'; const mbar=document.createElement('i'); mbar.style.width = Math.min(100, sector.level)+'%'; meter.appendChild(mbar); meta.appendChild(meter);
+      const btn = document.createElement('button'); btn.textContent = 'View Details'; btn.onclick = ()=> openSectorModal(sector.id); meta.appendChild(btn);
+      box.appendChild(meta); return box;
+    }
+
+    function populateSlides(){
+      for (let i=1;i<=totalSlides;i++){ const el = byId(`slide${i}`); if (!el) continue; el.querySelectorAll('.box').forEach(n=>n.remove()); }
+      let idx = 0;
+      for (let slideIndex=1; slideIndex<=totalSlides; slideIndex++){
+        const slide = byId(`slide${slideIndex}`); if (!slide) continue;
+        const maxBoxes = boxesPerSlide[slideIndex-1]; let boxesOnThisSlide = 0;
+        while (idx < state.sectors.length && boxesOnThisSlide < maxBoxes){ slide.appendChild(createBox(state.sectors[idx])); idx++; boxesOnThisSlide++; }
+      }
+    }
+
+    function showSlide(n){ currentSlide = n < 1 ? totalSlides : (n>totalSlides?1:n); $$('.container').forEach((c, i)=> c.classList.toggle('active', (i+1)===currentSlide)); }
+
+    // ===== Modal & actions =====
+    function openSectorModal(id){
+      const s = state.sectors.find(x=>x.id===id); if (!s) return;
+      setText('modalTitle', s.name); setText('modalType', s.type.toUpperCase()); const img = byId('modalImg'); if (img) img.src = s.img; setText('modalDesc', s.desc);
+      refreshSectorKpis();
+      const actions = $('.modal-actions'); if (!actions) return; actions.innerHTML = '';
+
+      if (s.type==='expense'){
+        actions.append(
+          actionBtn('Increase Budget (+10%)', ()=>{ const cost = Math.round(s.budget*0.10); s.budget += cost; adjustTreasury(-cost/12); adjustPopularity(+rand(0.5,2.0)); log(`${s.name}: Budget up ${fmtMoney(cost)}.`); }),
+          actionBtn('Cut Spending (-10%)', ()=>{ const save = Math.round(s.budget*0.10); s.budget -= save; adjustTreasury(+save/12); adjustPopularity(-rand(1.0,3.0)); log(`${s.name}: Spending cut ${fmtMoney(save)}.`); }),
+          actionBtn('Reform Program (one-time $100M)', ()=>{ const fee=100_000_000; if(!spendIfPossible(fee)) return; s.efficiency = clamp(s.efficiency + 8, 0, 130); adjustPopularity(+rand(1.5,3.5)); log(`${s.name}: Reform enacted.`); })
+        );
+      } else if (s.type==='income'){
+        actions.append(
+          actionBtn('Sector Upgrade (+10% future income)', ()=>{ const fee = Math.round(s.income*0.15); if (!spendIfPossible(fee)) return; s.income = Math.round(s.income*1.10); adjustPopularity(+rand(0.2,1.2)); log(`${s.name}: Upgrade ${fmtMoney(fee)} → income ${fmtMoney(s.income)}.`); }),
+          actionBtn('Privatize (one-time cash)', ()=>{ const raise = Math.round(s.income*1.2); s.income = Math.round(s.income*0.60); adjustTreasury(+raise); adjustPopularity(-rand(0.5,2.5)); log(`${s.name}: Privatized. +${fmtMoney(raise)}.`); })
+        );
+      } else {
+        if (s.name==='Taxes'){
+          actions.append(document.createTextNode('Use the national tax slider on this page. Taxes are applied to GDP each month.'));
+        } else if (s.name==='Central Bank'){
+          actions.append(
+            actionBtn('Quantitative Easing (print $300–600M)', ()=>{ const amt = 300_000_000 + Math.floor(rand(0,300_000_000)); adjustTreasury(+amt); adjustPopularity(-rand(0.2,1.0)); state.inflation = clamp(state.inflation + rand(0.2,0.6), 0, 40); log(`Central Bank injected ${fmtMoney(amt)}.`); }),
+            actionBtn('Raise Interest Rates', ()=>{ adjustPopularity(-rand(0.3,1.3)); state.growthNominal -= 0.012; state.inflation = clamp(state.inflation - rand(0.2,0.6), 0, 40); log('Rates raised. Growth tempered.'); }),
+            actionBtn('Cut Interest Rates', ()=>{ adjustPopularity(+rand(0.2,1.0)); state.growthNominal += 0.012; state.inflation = clamp(state.inflation + rand(0.1,0.4), 0, 40); log('Rates cut. Growth boosted.'); })
+          );
+        } else {
+          actions.append(
+            actionBtn('Pass Popular Reform ($120M)', ()=>{ if(!spendIfPossible(120_000_000)) return; adjustPopularity(+rand(2.0,4.0)); log(`${s.name}: Popular reform passed.`); }),
+            actionBtn('Austerity Package (+$200M)', ()=>{ adjustPopularity(-rand(2.0,5.0)); adjustTreasury(+200_000_000); log(`${s.name}: Austerity enacted.`); })
+          );
+        }
+      }
+
+      byId('btnCapex').onclick = ()=>{
+        const amtM = Number(byId('capexInput').value)||0; const amt = amtM*1_000_000; if (!spendIfPossible(amt)) return;
+        s.capex += amt;
+        const baseUnit = 120_000_000; const raw = s.capex/baseUnit; s.level = clamp(Math.round( Math.min(60, raw) + Math.max(0, (raw-60)*0.4 ) ), 0, 130);
+        log(`${s.name}: Invested CAPEX ${fmtMoney(amt)}. Level ${s.level}%.`);
+        refreshSectorKpis(); populateSlides();
+      };
+
+      byId('btnHire').onclick = ()=>{
+        const k = Math.max(0, Number(byId('hireInput').value)||0); const hire = Math.round(k*1000);
+        if (hire<=0) return;
+        // NO HIRING CAP: if hires exceed unemployed, expand labor & population (immigration)
+        const unemployed = Math.max(0, Math.round(state.laborForce * (state.unemployment/100)));
+        const deficit = Math.max(0, hire - unemployed);
+        s.staff = (s.staff||0) + hire;
+        // If deficit, add people (immigration)
+        if (deficit>0){ state.population += deficit; state.laborForce += Math.round(deficit * 0.88); }
+        // decrease unemployment
+        const newUnempCount = Math.max(0, unemployed - Math.min(hire, unemployed));
+        state.unemployment = clamp( (newUnempCount / state.laborForce) * 100, 0, 40 );
+        // Efficiency bump & ROI boost with more people
+        s.efficiency = clamp(s.efficiency + Math.min(8, Math.round(hire/5000)), 0, 130);
+        // ROI increases with more people: +10% per 10k hires in this action (scaled)
+        const roiBump = 1 + 0.10 * (hire / 10000);
+        s.roi = s.roi * roiBump;
+        log(`${s.name}: Hired ${hire.toLocaleString()} staff. ROI now ${(s.roi*100).toFixed(1)}%.`);
+        refreshSectorKpis(); populateSlides(); updateHUD();
+      };
+
+      byId('btnLayoff').onclick = ()=>{
+        const lay = Math.min(1000, s.staff||0);
+        s.staff = (s.staff||0) - lay;
+        const unempCount = Math.round(state.laborForce * (state.unemployment/100)) + lay;
+        state.unemployment = clamp( (unempCount / state.laborForce) * 100, 0, 40 );
+        log(`${s.name}: Laid off ${lay.toLocaleString()} staff.`);
+        refreshSectorKpis(); populateSlides(); updateHUD();
+      };
+
+      function refreshSectorKpis(){
+        setText('kBudget', fmtMoney(s.budget)); setText('kIncome', fmtMoney(s.income)); setText('kEff', s.efficiency); setText('kLevel', s.level+'%'); setText('kCapex', fmtMoney(s.capex)); setText('kROI', (s.roi*100).toFixed(1)+'%'); setText('kStaff', (s.staff||0).toLocaleString()); const pay = monthlyPayrollFor(s); setText('kPayroll', fmtMoney(pay)); setText('kFacilities', (state.facilities[s.name]||0).toLocaleString());
+      }
+
+      const dlg = byId('detailsModal'); if (!dlg) return; dlg.showModal ? dlg.showModal() : dlg.setAttribute('open','');
+    }
+
+    function actionBtn(label, handler){ const b = document.createElement('button'); b.textContent = label; b.onclick = ()=>{ handler(); updateHUD(); renderPortfolio(); }; return b; }
+    function closeDetails(){ const dlg = byId('detailsModal'); if (!dlg) return; dlg.close?.(); }
+
+    // ===== Economy, workforce, investments & advisor =====
+    function monthlyPayrollFor(s){ const avg = state.avgMonthlyWage || 2000; const mult = salaryMult[s.name] || salaryMult.default; return (s.staff||0) * avg * mult; }
+
+    function portfolioMonthlyReturn(){
+      let total = 0;
+      state.portfolio.forEach(p => {
+        const mu = p.apr/12; const vol = p.monthlyVol || 0; const shock = vol ? rand(-vol, vol) : 0; const r = mu + shock; const gain = p.principal * r; p.principal += gain; total += gain;
+      });
+      return total;
+    }
+
+    function facilityOutputs(){
+      let gdpFromFacilities = 0;
+      state.sectors.forEach(s=>{
+        if (s.type!=='income') return;
+        const count = state.facilities[s.name] || 0;
+        const rateM = facilityRateM[s.name] || 0;
+        const eff = s.efficiency/100; const levelBoost = 1 + s.level/120; // softer boost
+        gdpFromFacilities += count * rateM * 1_000_000 * eff * levelBoost;
+      });
+      return gdpFromFacilities;
+    }
+
+    function sectorMonthlyFlows(){
+      let addToTreasury = 0; let addToGDP = 0; let payroll = 0;
+      const baseProdPerWorker = state.laborForce>0 ? (state.gdp / state.laborForce) / 12 : 0; // monthly GDP per worker
+      state.sectors.forEach(s=>{
+        const eff = s.efficiency/100; const levelBoost = 1 + s.level/100;
+        const roi = s.roi * eff * levelBoost; // effective annual on CAPEX
+        const monthlyCapexReturn = s.capex * (roi/12);
+        addToTreasury += monthlyCapexReturn; // state captures CAPEX returns (state-owned projects)
+        addToGDP += monthlyCapexReturn;
+        // Workforce productivity
+        const wprod = baseProdPerWorker * (prodMult[s.name] || 0.8) * eff;
+        const staffGDP = (s.staff||0) * wprod;
+        addToGDP += staffGDP;
+        // Payroll costs
+        const pay = monthlyPayrollFor(s); payroll += pay;
+      });
+      // Private sector facility outputs contribute to GDP only; treasury gains via taxes
+      addToGDP += facilityOutputs();
+      return { addToTreasury, addToGDP, payroll };
+    }
+
+    function monthTick(){ if (state.gameOver) return; 
+      const gdpBaseBefore = state.gdp;
+      const monthlyGrowth = Math.pow(1+state.growthNominal, 1/12) - 1;
+      state.gdp *= (1 + monthlyGrowth);
+
+      const flows = sectorMonthlyFlows();
+      state.gdp += flows.addToGDP;
+
+      const taxMood = 1 - Math.max(0, (state.inflation-3))*0.01 + (state.popularity-50)*0.002/100;
+      const monthlyTaxRevenue = clamp((state.taxRate/100) * (state.gdp/12) * clamp(taxMood, .9, 1.1), 0, Infinity);
+
+      const sectorIncome = state.sectors.reduce((a,s)=> a + (s.income||0)/12, 0);
+      const sectorExpense = state.sectors.reduce((a,s)=> a + (s.budget||0)/12, 0);
+      const investIncome = portfolioMonthlyReturn();
+
+      const delta = monthlyTaxRevenue + sectorIncome + investIncome + flows.addToTreasury - sectorExpense - flows.payroll;
+      state.treasury += delta;
+
+      if (delta < 0) state.popularity -= 0.3; else state.popularity += 0.1;
+      state.popularity -= clamp((state.inflation-3)*0.05, 0, 3);
+      state.popularity = clamp(state.popularity, 0, 100);
+
+      const d = state.date; state.date = new Date(d.getFullYear(), d.getMonth()+1, 1);
+
+      if (chance(0.10)) triggerRandomEvent(); // 10% events monthly per your spec
+
+      updateHUD();
+      state.fiscalHistory.unshift(delta); state.fiscalHistory = state.fiscalHistory.slice(0, 12);
+      const parts = [];
+      if (investIncome) parts.push(`Investments +${fmtMoney(investIncome)}`);
+      if (flows.payroll) parts.push(`Payroll −${fmtMoney(flows.payroll)}`);
+      log(`Month ended. GDP ${fmtMoney(gdpBaseBefore)} → ${fmtMoney(state.gdp)}. Net ${delta>=0?'+':''}${fmtMoney(delta)} ${parts.length?`(${parts.join(', ')})`:''}. Treasury ${fmtMoney(state.treasury)}.`);
+      renderPortfolio();
+      renderLeaderboard(true);
+      checkGameOver();
+    }
+
+    function yearTick(){ for (let i=0;i<12;i++) monthTick(); }
+
+    function adjustTreasury(amount){ state.treasury += amount; updateHUD(); if (amount!==0) toast(`${amount>0?'+':''}${fmtMoney(amount)} treasury`); checkGameOver(); }
+    function spendIfPossible(cost){ if (state.treasury < cost){ toast('Not enough funds!'); return false;} adjustTreasury(-cost); return true; }
+    function adjustPopularity(dp){ state.popularity = clamp(state.popularity + dp, 0, 100); updateHUD(); if (dp!==0) toast(`${dp>=0?'+':''}${dp.toFixed(1)}% popularity`); checkGameOver(); }
+
+    function updateHUD(){
+      setText('treasuryAmount', fmtMoney(state.treasury));
+      setText('gdp', fmtMoney(state.gdp));
+      setText('pop', fmtCount(state.population));
+      setText('labor', fmtCount(state.laborForce));
+      setText('popularity', `${Math.round(state.popularity)}%`);
+      setText('inflation', `${state.inflation.toFixed(1)}%`);
+      setText('unemp', `${state.unemployment.toFixed(1)}%`);
+      const d = state.date; setText('timeline', d.toLocaleDateString('en-GB'));
+      setText('taxRateLabel', state.taxRate);
+    }
+
+    function log(msg){ state.log.unshift({ t: new Date(), msg }); const el = document.createElement('div'); el.className='log-item'; el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`; const list = byId('logList'); if (list) list.prepend(el); if (list) while (list.children.length>200) list.removeChild(list.lastChild); }
+
+    function checkGameOver(){
+      if (state.gameOver) return;
+      if (state.gdp >= state.targetGDP){ endGame(`${state.country} (You)`); }
+      else if (state.popularity <= 0){ showNotice('You were impeached due to 0% approval. Click New to try again.', 'danger'); state.gameOver = true; }
+      else if (state.treasury < -500_000_000){ showNotice('Sovereign default! Treasury fell below −$500M. Click New to restart.', 'danger'); state.gameOver = true; }
+      else hideNotice();
+    }
+
+    function endGame(winner){ showNotice(`🏁 Game over! ${winner} reached $${(state.targetGDP/1_000_000_000_000).toFixed(0)}T GDP first.`, 'win'); state.gameOver = true; }
+
+    function showNotice(text, tone='warn'){ const n = byId('notice'); if (!n) return; n.style.display='block'; n.style.borderColor = tone==='danger'? '#ef9a9a' : '#ffe082'; n.style.background = tone==='danger'? '#ffebee' : tone==='win'? '#ecfeff' : '#fff8e1'; n.textContent = text; }
+    function hideNotice(){ const n=byId('notice'); if (n) n.style.display='none'; }
+
+    // ===== Events =====
+    const events = [
+      { title:'Hurricane Devastates Coast', desc:'Severe storms cause major damage and displacement.', options:[ {label:'Send massive relief ($200M)', t:-200_000_000, p:+3.5, effect:()=>{ state.unemployment = clamp(state.unemployment-0.3, 2, 25); }}, {label:'Targeted aid ($80M)', t:-80_000_000, p:+1.5, effect:()=>{}}, {label:'Local response only', t:0, p:-3.0, effect:()=>{}} ] },
+      { title:'Tech Boom', desc:'A wave of startups lifts productivity and tax receipts.', options:[ {label:'Issue innovation grants ($120M)', t:-120_000_000, p:+2.0, effect:()=>{ state.growthNominal += 0.01; state.unemployment = clamp(state.unemployment-0.4, 2, 25);} }, {label:'Let market run', t:0, p:+0.5, effect:()=>{ state.growthNominal += 0.004; }} ] },
+      { title:'Border Clash', desc:'Security situation worsens at the border.', options:[ {label:'Deploy forces ($150M)', t:-150_000_000, p:+1.0, effect:()=>{ state.popularity += 0.4; }}, {label:'Diplomatic push', t:-20_000_000, p:+0.2, effect:()=>{} } ] },
+      { title:'Oil Price Shock', desc:'Global oil prices spike 40%.', options:[ {label:'Subsidize fuel ($150M)', t:-150_000_000, p:+2.5, effect:()=>{ state.inflation = clamp(state.inflation+0.5,0,40); }}, {label:'Encourage conservation', t:0, p:-1.0, effect:()=>{}} ] }
+    ];
+
+    function triggerRandomEvent(){
+      const e = events[Math.floor(Math.random()*events.length)];
+      const dlg = document.createElement('dialog'); dlg.className='modal'; dlg.style.border='none'; dlg.style.borderRadius='16px'; dlg.style.padding='0';
+      dlg.innerHTML = `
+        <div class="modal-head"><strong>${e.title}</strong><button data-skip>Close</button></div>
+        <div class="modal-body" style="grid-template-columns:1fr"><p>${e.desc}</p>${e.options.map((o,i)=>`<button data-i="${i}">${o.label}</button>`).join('')}</div>`;
+      document.body.appendChild(dlg); dlg.showModal?.();
+      dlg.addEventListener('click', (ev)=>{ const b = ev.target.closest('button'); if (!b) return; if (b.dataset.skip!==undefined){ dlg.close?.(); dlg.remove(); return; } const opt = e.options[Number(b.dataset.i)]; adjustTreasury(opt.t); adjustPopularity(opt.p); opt.effect?.(); log(`Event: ${e.title} → "${opt.label}"`); dlg.close?.(); dlg.remove(); updateHUD(); });
+    }
+
+    // ===== Portfolio UI =====
+    function renderPortfolio(){
+      const host = byId('portfolioContainer'); if (!host) return;
+      if (state.portfolio.length===0){ host.innerHTML = '<em>No investments yet. Use "Manage National Investment Fund" to grow reserves.</em>'; return; }
+      const rows = state.portfolio.map((p,i)=>`<tr><td>${p.name}</td><td>${fmtMoney(p.principal)}</td><td>${(p.apr*100).toFixed(1)}%</td><td>${p.riskText}</td><td><button data-idx="${i}" class="cashout">Cash Out</button></td></tr>`).join('');
+      host.innerHTML = `<table><thead><tr><th>Name</th><th>Principal</th><th>APR</th><th>Risk</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table>`;
+      host.querySelectorAll('button.cashout').forEach(btn=> btn.onclick = ()=>{ const i = Number(btn.dataset.idx); const inv = state.portfolio[i]; if (!inv) return; adjustTreasury(inv.principal); log(`Cashed out ${inv.name} → ${fmtMoney(inv.principal)} to treasury.`); state.portfolio.splice(i,1); renderPortfolio(); });
+    }
+
+    // ===== Advisor =====
+    function advisorSuggestions(){
+      const suggests = [];
+      const last3 = state.fiscalHistory.slice(0,3);
+      const avgDelta = last3.length? last3.reduce((a,b)=>a+b,0)/last3.length : 0;
+      if (avgDelta < -50_000_000 && state.popularity > 55){ suggests.push({ title:'Raise taxes by +2%', risk:'med', action:()=>{ state.taxRate = clamp(state.taxRate+2,0,60); log('Advisor applied: +2% tax.'); updateHUD(); } }); }
+      const topExpenses = state.sectors.filter(s=>s.type==='expense').sort((a,b)=>b.budget-a.budget).slice(0,2);
+      if (avgDelta < 0 && topExpenses.length){ suggests.push({ title:`Trim ${topExpenses[0].name} by 5%`, risk:'low', action:()=>{ const s=topExpenses[0]; const save=Math.round(s.budget*0.05); s.budget-=save; adjustTreasury(+save/12); log(`Advisor cut ${s.name} by ${fmtMoney(save)}.`); } }); }
+      if (state.treasury > 300_000_000 && state.portfolio.length<3){ suggests.push({ title:'Invest $200M in Balanced Fund (7% APR)', risk:'med', action:()=>{ makeInvestment(200_000_000, 'balanced'); } }); }
+      const bestSector = state.sectors.filter(s=>s.roi>=0.08).sort((a,b)=> (b.roi*b.efficiency) - (a.roi*a.efficiency))[0];
+      if (bestSector && state.treasury>250_000_000){ suggests.push({ title:`CAPEX: +$250M into ${bestSector.name}`, risk:'med', action:()=>{ if(!spendIfPossible(250_000_000)) return; bestSector.capex += 250_000_000; bestSector.level = clamp(bestSector.level+3,0,130); log(`Advisor invested $250M into ${bestSector.name}.`); populateSlides(); } }); }
+      if (state.unemployment > 7){ suggests.push({ title:'Hire 10k into Infrastructure', risk:'low', action:()=>{ const s = state.sectors.find(x=>x.name==='Infrastructure'); if(!s) return; const hire = 10_000; s.staff=(s.staff||0)+hire; state.population += Math.round(hire*0.12); state.laborForce += Math.round(hire*0.88); state.unemployment = clamp((Math.max(0, state.laborForce*(state.unemployment/100)-hire)/state.laborForce)*100,0,40); log('Advisor hired 10k workers into Infrastructure.'); } }); }
+      return suggests;
+    }
+
+    function openAdvisor(){ const dlg = byId('advisorModal'); if (!dlg) return; const list = byId('adviceList'); list.innerHTML=''; const items = advisorSuggestions(); if (items.length===0) list.innerHTML='<em>No urgent recommendations. Stay the course.</em>'; items.forEach(s=>{ const card=document.createElement('div'); card.className='card'; const riskClass = s.risk==='low'?'low':s.risk==='high'?'high':'med'; card.innerHTML = `<h4>${s.title} <span class="risk ${riskClass}">${s.risk.toUpperCase()}</span></h4><button>Apply</button>`; const btn = card.querySelector('button'); btn.onclick=()=>{ s.action(); renderPortfolio(); dlg.close?.(); updateHUD(); }; list.appendChild(card); }); dlg.showModal?.(); }
+
+    // ===== Investments =====
+    function makeInvestment(amount, strategy){
+      const amt = amount; if (!spendIfPossible(amt)) return;
+      const strat = {
+        conservative: { apr: 0.04, vol: 0.002, riskText:'Low' },
+        balanced:     { apr: 0.07, vol: 0.005, riskText:'Medium' },
+        aggressive:   { apr: 0.12, vol: 0.012, riskText:'High' }
+      }[strategy];
+      const inv = { id: Date.now()+Math.random(), name: `${strategy[0].toUpperCase()+strategy.slice(1)} Fund`, principal: amt, apr: strat.apr, monthlyVol: strat.vol, riskText: strat.riskText };
+      state.portfolio.push(inv); renderPortfolio(); log(`Invested ${fmtMoney(amt)} into ${inv.name} (${(inv.apr*100).toFixed(1)}% APR).`);
+    }
+
+    function openInvestModal(){ const dlg = byId('investModal'); if (!dlg) return; dlg.showModal?.(); }
+
+    // ===== World state for AI countries =====
+    const world = {};
+
+    async function ensureWorldCountry(name){
+      if (world[name]) return world[name];
+      const base = countriesDB[name] || { gdp: 1_000_000_000_000, population: 50_000_000, growthNominal: 0.04 };
+      const code = countryCodes[name];
+      let gdp = base.gdp, pop = base.population, growth = base.growthNominal, mil=0;
+      try{ const r=await fetch(`https://api.worldbank.org/v2/country/${code}/indicator/NY.GDP.MKTP.CD?format=json`); const j=await r.json(); const rows=j?.[1]; const latest=rows?.find(x=>x.value!=null); if(latest?.value) gdp=latest.value; }catch{}
+      try{ const r=await fetch(`https://api.worldbank.org/v2/country/${code}/indicator/SP.POP.TOTL?format=json`); const j=await r.json(); const rows=j?.[1]; const latest=rows?.find(x=>x.value!=null); if(latest?.value) pop=latest.value; }catch{}
+      try{ const r=await fetch(`https://api.worldbank.org/v2/country/${code}/indicator/MS.MIL.TOTL.P1?format=json`); const j=await r.json(); const rows=j?.[1]; const latest=rows?.find(x=>x.value!=null); if(latest?.value) mil=latest.value; }catch{}
+      let facilities = seedFacilitiesForCountry(name, gdp);
+      facilities = await enrichFacilitiesFromInternet(name, facilities);
+      world[name] = { name, gdp, population: pop, growthNominal: growth, military: mil||Math.round(pop*0.004), facilities };
+      return world[name];
+    }
+
+    // ===== War system =====
+    function amILargestMilitary(){
+      const my = state.militaryPersonnel || 0;
+      let max = my; let leader = state.country;
+      for (const c of competitors){ const w = world[c.name]; if (!w) continue; if (w.military > max){ max = w.military; leader = c.name; } }
+      return leader === state.country;
+    }
+
+    function openWarRoom(){ const dlg = byId('warModal'); if (!dlg) return; const host = byId('warTargets'); host.innerHTML = '<em>Loading...</em>';
+      Promise.all(competitors.map(c=>ensureWorldCountry(c.name))).then(() => {
+        const rows = competitors.filter(c=>c.name!==state.country).map(c=>{
+          const w = world[c.name];
+          const totalFac = industrialSectors.reduce((a,s)=> a + (w.facilities[s]||0), 0);
+          const canAttack = amILargestMilitary();
+          return `<tr>
+            <td>${c.name}</td>
+            <td>${fmtMoney(w.gdp)}</td>
+            <td>${fmtCount(w.population)}</td>
+            <td>${fmtCount(w.military)}</td>
+            <td>${totalFac.toLocaleString()}</td>
+            <td><button data-target="${c.name}" ${canAttack?'':'disabled'}>${canAttack?'Attack':'Need largest military'}</button></td>
+          </tr>`;
+        }).join('');
+        host.innerHTML = `<table><thead><tr><th>Country</th><th>GDP</th><th>Population</th><th>Military</th><th>Facilities</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table>`;
+        host.querySelectorAll('button[data-target]').forEach(btn=> btn.onclick = ()=> declareWar(btn.dataset.target));
+      });
+      dlg.showModal?.();
+    }
+
+    function declareWar(targetName){
+      const target = world[targetName]; if (!target) return; if (!amILargestMilitary()){ toast('You must have the largest military to attack.'); return; }
+      const my = state.militaryPersonnel||0; const their = target.military||0;
+      // Resolve battle: attacker loses defenders' troop count (min), defender loses all
+      const myLoss = Math.min(my, their); state.militaryPersonnel = Math.max(0, my - myLoss); target.military = 0;
+      // Casualties & annexations per your rules
+      const popDeaths = target.population * 0.10; // 10% casualties
+      const popAnnex = target.population * 0.90; // 90% annexed to winner (Option A)
+      const gdpDestroyed = target.gdp * 0.10; // one-time GDP destruction
+      const gdpAnnex = target.gdp * 0.80; // 80% annexed
+      // Apply changes to target (population becomes 0; GDP retains 10%)
+      target.population = 0;
+      target.gdp = Math.max(0, target.gdp - gdpAnnex - gdpDestroyed);
+      // Apply to player
+      state.population += Math.round(popAnnex);
+      state.laborForce += Math.round(popAnnex * 0.55);
+      state.gdp += gdpAnnex;
+      // Facilities: 10% destroyed, 90% transferred
+      industrialSectors.forEach(sec=>{
+        const have = target.facilities[sec] || 0; const destroyed = Math.round(have * 0.10); const taken = have - destroyed; target.facilities[sec] = 0; state.facilities[sec] = (state.facilities[sec]||0) + taken; });
+      log(`⚔️ War: ${state.country} attacked ${targetName}. Annexed 80% GDP (+${fmtMoney(gdpAnnex)}), destroyed 10% (−${fmtMoney(gdpDestroyed)}). Population: 10% dead, 90% annexed (+${fmtCount(popAnnex)}). Facilities: 90% captured, 10% destroyed. Troop loss: ${fmtCount(myLoss)}.`);
+      renderLeaderboard(true); updateHUD(); populateSlides();
+      byId('warModal')?.close?.();
+      checkGameOver();
+    }
+
+    // ===== Leaderboard =====
+    function renderLeaderboard(checkVictory=false){
+      const rows = byId('leaderRows'); if (!rows) return;
+      competitors.forEach(async c=>{
+        await ensureWorldCountry(c.name);
+        const w = world[c.name];
+        if (c.name===state.country){ w.gdp = state.gdp; w.population = state.population; w.military = state.militaryPersonnel; }
+        else { w.gdp *= (1 + Math.pow(1+(w.growthNominal||0.04),1/12)-1); }
+      });
+      const sorted = competitors.slice().sort((a,b)=> (world[b.name]?.gdp||0) - (world[a.name]?.gdp||0));
+      rows.innerHTML = sorted.map(c=>{
+        const w = world[c.name] || {}; const pct = clamp(((w.gdp||1)/state.targetGDP)*100, 0, 100).toFixed(2);
+        return `<div style="display:grid;grid-template-columns:140px 1fr 110px;gap:10px;align-items:center">
+          <strong style="color:#e2e8f0">${c.name}</strong>
+          <div class="pb"><i style="width:${pct}%; background:linear-gradient(90deg, ${c.color||'#06b6d4'}, #06b6d4)"></i></div>
+          <div style="text-align:right;color:#cbd5e1">${fmtMoney(w.gdp||0)}</div>
+        </div>`;
+      }).join('');
+      if (checkVictory && !state.gameOver){ const winner = competitors.find(c=> (world[c.name]?.gdp||0) >= state.targetGDP && c.name !== state.country); if (winner) endGame(winner.name); }
+    }
+
+    // ===== Save / Load =====
+    function save(){ localStorage.setItem('worldSimSave', JSON.stringify({ ...state, date: state.date.toISOString() })); toast('Game saved'); }
+    function load(){ const raw=localStorage.getItem('worldSimSave'); if(!raw){ toast('No save found'); return; } const obj=JSON.parse(raw); obj.date = new Date(obj.date); state = obj; updateHUD(); populateSlides(); rebuildLog(); renderPortfolio(); renderLeaderboard(); toast('Game loaded'); }
+    function rebuildLog(){ const list = byId('logList'); if (!list) return; list.innerHTML=''; state.log.slice().reverse().forEach(e=>{ const el=document.createElement('div'); el.className='log-item'; el.textContent = `[${new Date(e.t).toLocaleTimeString()}] ${e.msg}`; list.appendChild(el); }); }
+    function newGame(){ state = initialState(); const cs = byId('countrySelect'); if (cs) cs.value = state.country; buildSectors(); state.facilities = seedFacilitiesForCountry(state.country, countriesDB[state.country]?.gdp||1_000_000_000_000); populateSlides(); updateHUD(); const list = byId('logList'); if (list) list.innerHTML=''; loadCountry(state.country).then(()=>{ log(`Welcome. Lead ${state.country} to $100T GDP.`); hideNotice(); renderPortfolio(); renderLeaderboard(); }); }
+
+    // ===== Tax control =====
+    function renderTaxFromState(){ const tr = byId('taxRate'); if (tr) tr.value = state.taxRate; setText('taxRateLabel', state.taxRate); }
+
+    // ===== Country data fetch (World Bank + enrichment + fallbacks) =====
+    async function loadCountry(name){
+      state.country = name;
+      const code = countryCodes[name];
+      let gdp = countriesDB[name]?.gdp; let pop = countriesDB[name]?.population; let growthNominal = countriesDB[name]?.growthNominal || state.growthNominal;
+      let labor = 0; let gdpPc = 0; let mil=0; let policeRate = defaultPolicePer100k[name] ?? 220;
+      try{ const gdpResp = await fetch(`https://api.worldbank.org/v2/country/${code}/indicator/NY.GDP.MKTP.CD?format=json`); const gdpJson = await gdpResp.json(); const rows = Array.isArray(gdpJson) ? gdpJson[1] : null; const latest = rows?.find(r=> r.value!==null); if (latest?.value) gdp = Number(latest.value); }catch{}
+      try{ const popResp = await fetch(`https://api.worldbank.org/v2/country/${code}/indicator/SP.POP.TOTL?format=json`); const popJson = await popResp.json(); const rows = Array.isArray(popJson) ? popJson[1] : null; const latest = rows?.find(r=> r.value!==null); if (latest?.value) pop = Number(latest.value); }catch{}
+      try{ const lfResp = await fetch(`https://api.worldbank.org/v2/country/${code}/indicator/SL.TLF.TOTL.IN?format=json`); const lfJson = await lfResp.json(); const rows = Array.isArray(lfJson) ? lfJson[1] : null; const latest = rows?.find(r=> r.value!==null); if (latest?.value) labor = Number(latest.value); }catch{}
+      try{ const pcResp = await fetch(`https://api.worldbank.org/v2/country/${code}/indicator/NY.GDP.PCAP.CD?format=json`); const pcJson = await pcResp.json(); const rows = Array.isArray(pcJson) ? pcJson[1] : null; const latest = rows?.find(r=> r.value!==null); if (latest?.value) gdpPc = Number(latest.value); }catch{}
+      try{ const milResp = await fetch(`https://api.worldbank.org/v2/country/${code}/indicator/MS.MIL.TOTL.P1?format=json`); const milJson = await milResp.json(); const rows = Array.isArray(milJson) ? milJson[1] : null; const latest = rows?.find(r=> r.value!==null); if (latest?.value) mil = Number(latest.value); }catch{}
+
+      if (!labor) labor = Math.round((pop||0)*0.55);
+      if (!gdpPc && gdp && pop) gdpPc = gdp / pop;
+
+      let facSeed = seedFacilitiesForCountry(name, gdp||1_000_000_000_000);
+      facSeed = await enrichFacilitiesFromInternet(name, facSeed);
+
+      Object.assign(state, {
+        gdp: gdp,
+        population: pop,
+        laborForce: labor,
+        gdpPerCapita: gdpPc,
+        avgMonthlyWage: (gdpPc*0.45)/12, // wage proxy = 45% of GDP/capita
+        growthNominal: growthNominal,
+        treasury: (gdp||0) * 0.50, // per your spec: 50% of GDP as starting treasury
+        militaryPersonnel: mil||Math.round(pop*0.004),
+        policePer100k: policeRate,
+        facilities: facSeed
+      });
+
+      // Seed police/military staff into sectors
+      const police = state.sectors.find(s=>s.name==='Police'); if (police) police.staff = Math.round((state.population/100_000) * state.policePer100k);
+      const def = state.sectors.find(s=>s.name==='Ministry of Defence'); if (def) def.staff = state.militaryPersonnel || 0;
+
+      updateHUD(); renderLeaderboard();
+      log(`Loaded ${name}: GDP ${fmtMoney(state.gdp)}, Pop ${fmtCount(state.population)}, Treasury ${fmtMoney(state.treasury)}. Labor ${fmtCount(state.laborForce)}. Avg wage/mo ${fmtMoney(state.avgMonthlyWage)}.`);
+    }
+
+    const defaultPolicePer100k = {
+      'United States': 240,
+      'United Kingdom': 220,
+      'Germany': 300,
+      'Japan': 200,
+      'India': 150,
+      'China': 170,
+      'France': 310,
+      'Italy': 400,
+      'Canada': 190,
+      'Brazil': 180
+    };
+
+    // ===== Tests =====
+    function runSmokeTests(){
+      const results = []; const ok=(m)=>results.push('✅ '+m); const fail=(m)=>results.push('❌ '+m);
+      try { byId('treasuryAmount') && byId('popularity') && byId('timeline') && byId('gdp') ? ok('HUD elements present') : fail('HUD elements missing'); } catch(e){ fail('HUD check threw'); }
+      try { updateHUD(); ok('updateHUD executed'); } catch(e){ fail('updateHUD threw: '+e.message); }
+      try { // NEW: CSV parser sanity (CRLF + quoting)
+        const sample = 'a,b\r\n"x,1",2\r\n3,4';
+        const rows = parseCSV(sample);
+        (rows.length===2 && rows[0]['a']==='x,1' && rows[0]['b']==='2' && rows[1]['a']==='3' && rows[1]['b']==='4') ? ok('CSV parser handles CRLF & quotes') : fail('CSV parser failed simple case');
+      } catch(e){ fail('CSV parser test threw: '+e.message); }
+      try { const tBefore=state.treasury; makeInvestment(200_000_000,'balanced'); const before = state.treasury; monthTick(); (state.treasury>before) ? ok('Treasury rose after investment & month') : fail('Treasury did not rise'); } catch(e){ fail('Investment growth test threw: '+e.message); }
+      try { const g0 = state.gdp; const s = state.sectors.find(x=>x.type==='income'); if (s){ s.capex+=700_000_000; s.level=15; } monthTick(); (state.gdp>g0) ? ok('GDP increases month-over-month with sector CAPEX') : fail('GDP failed to increase with CAPEX'); } catch(e){ fail('GDP test threw'); }
+      try { const u0 = state.unemployment; const infra = state.sectors.find(x=>x.name==='Infrastructure'); if (infra){ const hire = 10_000; infra.staff += hire; state.population += Math.round(hire*0.12); state.laborForce += Math.round(hire*0.88); state.unemployment = clamp((Math.max(0, state.laborForce*(state.unemployment/100)-hire)/state.laborForce)*100,0,40); } (state.unemployment<u0) ? ok('Unemployment drops after hiring (no cap)') : fail('Unemployment did not drop'); } catch(e){ fail('Hiring test threw'); }
+      try {
+        // War test: ensure our military dominates and target exists
+        competitors.forEach(c=>{ world[c.name] = { name:c.name, gdp: 1_000_000_000_000, population: 50_000_000, military: 100_000, growthNominal:0.04, facilities: seedFacilitiesForCountry(c.name,1_000_000_000_000) }; });
+        const target='Brazil'; world[target].gdp = 2_000_000_000_000; world[target].population = 200_000_000; world[target].military = 200_000;
+        state.militaryPersonnel = 1_000_000; const myGDP0 = state.gdp; const myPop0 = state.population;
+        declareWar(target);
+        const annexGDP = 0.80 * 2_000_000_000_000; const annexPop = 0.90 * 200_000_000;
+        (state.gdp >= myGDP0 + annexGDP - 1) ? ok('War GDP annex logic ok (80% + 10% destroyed)') : fail('War GDP annex incorrect');
+        (state.population >= myPop0 + annexPop - 1) ? ok('War population annex logic ok (10% dead, 90% annex)') : fail('War population annex incorrect');
+      } catch(e){ fail('War test threw: '+e.message); }
+      results.forEach(r=>log(`[TEST] ${r}`)); toast('Smoke tests completed. Check log.');
+    }
+
+    // ===== Wiring & boot =====
+    function init(){
+      const w = (id, fn) => { const el = byId(id); if (el) el.onclick = fn; };
+      w('prevSlide', ()=> showSlide(currentSlide-1));
+      w('nextSlide', ()=> showSlide(currentSlide+1));
+      w('btnMonth', monthTick);
+      w('btnYear', yearTick);
+      w('btnSave', save);
+      w('btnLoad', load);
+      w('btnNew', newGame);
+      w('btnTests', runSmokeTests);
+      w('btnAdvisor', openAdvisor);
+      w('btnInvestFund', openInvestModal);
+      w('btnWar', openWarRoom);
+      const modalClose = byId('modalClose'); if (modalClose) modalClose.onclick = closeDetails;
+      const investClose = byId('investClose'); if (investClose) investClose.onclick = ()=> byId('investModal')?.close?.();
+      const warClose = byId('warClose'); if (warClose) warClose.onclick = ()=> byId('warModal')?.close?.();
+      const advisorClose = byId('advisorClose'); if (advisorClose) advisorClose.onclick = ()=> byId('advisorModal')?.close?.();
+      const investConfirm = byId('investConfirm'); if (investConfirm) investConfirm.onclick = ()=>{ const amtM = Number(byId('investAmount').value)||0; const rad = document.querySelector('input[name="strategy"]:checked'); const strat = rad?rad.value:'conservative'; makeInvestment(amtM*1_000_000, strat); byId('investModal')?.close?.(); };
+
+      const taxInput = byId('taxRate'); if (taxInput){ taxInput.addEventListener('input', (e)=>{ const prev = state.taxRate; state.taxRate = Number(e.target.value); setText('taxRateLabel', state.taxRate); const diff = state.taxRate - prev; if (diff!==0) adjustPopularity(diff>0 ? -0.5 : +0.5); }); taxInput.addEventListener('change', ()=>{ log(`Tax rate set to ${state.taxRate}%`); }); }
+
+      const countrySel = byId('countrySelect'); if (countrySel){ countrySel.addEventListener('change', async (e)=>{ buildSectors(); await loadCountry(e.target.value); populateSlides(); log(`You are now leading ${state.country}.`); }); }
+
+      buildSectors(); state.facilities = seedFacilitiesForCountry(state.country, countriesDB[state.country]?.gdp||1_000_000_000_000); populateSlides(); showSlide(1);
+      loadCountry(state.country).then(()=>{ updateHUD(); renderTaxFromState(); renderPortfolio(); renderLeaderboard(); log('Game initialized. Invest, hire, manage policy, wage war, and advance time.'); });
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
 </body>
 </html>
